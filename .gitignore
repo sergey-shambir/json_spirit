@@ -1,3 +1,26 @@
+
+# CMake
+CMakeCache.txt
+CMakeFiles
+CMakeScripts
+Testing
+Makefile
+cmake_install.cmake
+install_manifest.txt
+compile_commands.json
+CTestTestfile.cmake
+CPackConfig.cmake
+CPackSourceConfig.cmake
+
+# Visual Studio Code
+.vscode
+
+# Outputs
+json_demo
+json_headers_only_demo
+json_map_demo
+json_test
+
 # Prerequisites
 *.d
 

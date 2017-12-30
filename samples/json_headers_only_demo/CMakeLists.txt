@@ -1,0 +1,4 @@
+set(JSON_HEADERS_ONLY_DEMO_SRCS json_headers_only_demo.cpp)
+
+add_executable(json_headers_only_demo ${JSON_HEADERS_ONLY_DEMO_SRCS})
+target_link_libraries(json_headers_only_demo json_spirit)
