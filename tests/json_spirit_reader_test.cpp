@@ -1,16 +1,13 @@
 //          Copyright John W. Wilkinson 2007 - 2014
 // Distributed under the MIT License, see accompanying file LICENSE.txt
 
-// json spirit version 4.08
+#include "stdafx.h"
+#include "test_utils.h"
 
-#include "json_spirit_reader_test.h"
-#include "utils_test.h"
 #include "json_spirit_reader.h"
-#include "json_spirit_value.h" 
-#include "json_spirit_writer.h" 
+#include "json_spirit_value.h"
+#include "json_spirit_writer.h"
 
-#include <limits.h>
-#include <sstream>
 #include <boost/assign/list_of.hpp>
 #include <boost/timer.hpp>
 #include <boost/lexical_cast.hpp>
@@ -20,21 +17,382 @@ using namespace std;
 using namespace boost;
 using namespace boost::assign;
 
+// TODO: read-write-read-write-read checks: after each read JSON objects are the same
+// Texts after first and second write should be same.
+
 namespace
 {
-    template< class String_type, class Value_type >
-    void test_read( const String_type& s, Value_type& value )
+std::string SYNTAX_ONLY_TEST_DATA[] = {
+    // empty object
+    "{}",
+    "{ }",
+    "{ } ",
+    "\t\t{ }  ",
+    "   {}\t",
+
+    // empty array
+    "[]",
+    "[ ]",
+    "[ ] ",
+    "\t\t[ ]  ",
+    "   []\t",
+
+    // array of numbers and string
+    "[1,2,3]",
+    "[ 1, -2, 3]",
+    "[ 1.2, -2e6, -3e-6 ]",
+    "[ 1.2, \"str\", -3e-6, { \"field\" : \"data\" } ]",
+    "[" + std::to_string(INT_MIN) + "," + std::to_string(INT_MAX) + "]",
+    "[" + std::to_string(LONG_LONG_MIN) + "," + std::to_string(LONG_LONG_MAX) + "]",
+
+    // object with string key/values
+    "{\"\":\"\"}",
+    "{\"test\":\"123\"}",
+    "{\"test\" : \"123\"}",
+    "{\"testing testing testing\":\"123\"}",
+    "{\"\":\"abc\"}",
+    "{\"abc\":\"\"}",
+    "{\"\":\"\"}",
+    "{\"test1\":\"123\",\"test2\":\"456\"}",
+    "{\"test1\":\"123\",\"test2\":\"456\",\"test3\":\"789\"}",
+
+    // object with boolean value
+    "{\"test\":true}",
+    "{\"test\":false}",
+
+    // object with null value
+    "{\"test\":null}",
+
+    // object with nested array
+    "{\"test1\":[\"a\",\"bb\",\"cc\"]}",
+    "{\"test1\":[true,false,null]}",
+    "{\"test1\":[true,\"abc\",{\"a\":\"b\"},{\"d\":false},null]}",
+    "{\"test1\":[1,2,-3]}",
+    "{\"test1\":[1.1,2e4,-1.234e-34]}",
+
+    // object with nested object
+    "{\n"
+                    "\t\"test1\":\n"
+                    "\t\t{\n"
+                    "\t\t\t\"test2\":\"123\",\n"
+                    "\t\t\t\"test3\":\"456\"\n"
+                    "\t\t}\n"
+                    "}\n",
+    "{\"test1\":{\"test2\":{\"test3\":\"456\"}}}",
+    "{\"test1\":{\"test2\":\"123\",\"test3\":\"456\"}}",
+};
+
+std::string SYNTAX_FAIL_TEST_DATA[] = {
+    // Arrays without comma separator
+    "[1 2 3]",
+    "[\"key\" \"value\"]",
+    
+    // Arrays with double comma separator
+    "[1, 2,, 3]",
+    "[\"key\",, \"value\"]",
+
+    // Objects without comma/colon separator
+    "{ \"key\": \"value\" \"anotherKey\": \"anotherValue\" }",
+    "{ \"key\" \"value\", \"anotherKey\": \"anotherValue\" }",
+    
+    // Objects with double comma/colon separator
+    "{ \"key\": \"value\",, \"anotherKey\": \"anotherValue\" }",
+    "{ \"key\": \"value\", \"anotherKey\": :\"anotherValue\" }",
+
+    // TODO: json_spirit should have both strict/nostrict parsing modes.
+    // Arrays with trailing comma separator (strict JSON prohibits that)
+    "[1, 2, 3,]",
+
+    // TODO: json_spirit should fail on this test in strict mode.
+    // "[1, 2, 3],",
+};
+
+std::stringstream make_string_stream(const std::string& source)
+{
+    return std::stringstream(source);
+}
+
+std::wstringstream make_string_stream(const std::wstring& source)
+{
+    return std::wstringstream(source);
+}
+
+template<typename Value>
+class ReadTestDataBuilder
+{
+public:
+    using Config = typename  Value::Config_type;
+    using Object = typename Config::Object_type;
+    using Array = typename Config::Array_type;
+    using String = typename Config::String_type;
+    using Pair = typename Config::Pair_type;
+
+    static String get_source_1()
     {
-        // performs both types of read and checks they produce the same value
-
-        read( s, value );
-
-        Value_type value_2;
-
-        read_or_throw( s, value_2 );
-
-        assert_eq( value, value_2 );
+        constexpr char source[] = R"***({
+    "name 1": "value 1",
+    "name 2":
+    {
+        "name 3": [-10, 42, 99999],
+        "another name":
+        {
+            "name 5": null,
+            "name 4": 15812
+        },
+        "name 7": "This is a \"heavy\" case"
     }
+})***";
+        return encoding_cast<String>(source);
+    }
+
+    static Value get_value_1()
+    {
+        return Value(Object{
+            Pair{ key("name 1"), string("value 1") },
+            Pair{ key("name 2"), Value(Object{
+                Pair{ key("name 3"), array( -10, 42, 99999 ) },
+                Pair{ key("another name"), Value(Object{
+                    Pair{ key("name 5"), Value() },
+                    Pair{ key("name 4"), Value(15812) }
+                })},
+                Pair{ key("name 7"), string("This is a \"heavy\" case") }
+            })}
+        });
+    }
+
+private:
+    static String key(const std::string& str)
+    {
+        return encoding_cast<String>(str);
+    }
+
+    static Value string(const std::string& str)
+    {
+        return Value(encoding_cast<String>(str));
+    }
+
+    template <typename ...Args>
+    static Value array(Args... args)
+    {
+        return Value(Array{Value(args)...});
+    }
+};
+
+template<typename String>
+class ReadTestHelper
+{
+public:
+    using vConfig = typename json_spirit::Config_vector<String>;
+    using mConfig = typename json_spirit::Config_map<String>;
+    using vValue = typename vConfig::Value_type;
+    using mValue = typename mConfig::Value_type;
+    using vBuilder = ReadTestDataBuilder<vValue>;
+    using mBuilder = ReadTestDataBuilder<mValue>;
+
+    struct Case
+    {
+        String source;
+        vValue vExpected;
+        mValue mExpected;
+    };
+
+    static std::vector<Case> get_test_data()
+    {
+        return {
+            Case{ vBuilder::get_source_1(), vBuilder::get_value_1(), mBuilder::get_value_1() }
+        };
+    }
+
+    static void checkRead(const Case& data)
+    {
+        std::array<vValue, 6> vValues = {
+            invoke_read<vValue>(data.source),
+            invoke_read<vValue>(make_string_stream(data.source)),
+            invoke_read<vValue>(std::begin(data.source), std::end(data.source)),
+            invoke_read_or_throw<vValue>(data.source),
+            invoke_read_or_throw<vValue>(make_string_stream(data.source)),
+            invoke_read_or_throw<vValue>(std::begin(data.source), std::end(data.source)),
+        };
+        BOOST_CHECK_EQUAL(vValues.at(0), data.vExpected);
+        BOOST_CHECK_EQUAL(vValues.at(1), data.vExpected);
+        BOOST_CHECK_EQUAL(vValues.at(2), data.vExpected);
+        BOOST_CHECK_EQUAL(vValues.at(3), data.vExpected);
+        BOOST_CHECK_EQUAL(vValues.at(4), data.vExpected);
+        BOOST_CHECK_EQUAL(vValues.at(5), data.vExpected);
+
+        std::array<mValue, 6> mValues = {
+            invoke_read<mValue>(data.source),
+            invoke_read<mValue>(make_string_stream(data.source)),
+            invoke_read<mValue>(std::begin(data.source), std::end(data.source)),
+            invoke_read_or_throw<mValue>(data.source),
+            invoke_read_or_throw<mValue>(make_string_stream(data.source)),
+            invoke_read_or_throw<mValue>(std::begin(data.source), std::end(data.source)),
+        };
+
+        BOOST_CHECK_EQUAL(mValues.at(0), data.mExpected);
+        BOOST_CHECK_EQUAL(mValues.at(1), data.mExpected);
+        BOOST_CHECK_EQUAL(mValues.at(2), data.mExpected);
+        BOOST_CHECK_EQUAL(mValues.at(3), data.mExpected);
+        BOOST_CHECK_EQUAL(mValues.at(4), data.mExpected);
+        BOOST_CHECK_EQUAL(mValues.at(5), data.mExpected);
+    }
+    
+    template<typename Value, typename ...Args>
+    static Value invoke_read(Args... arguments)
+    {
+        Value value{};
+        BOOST_CHECK(json_spirit::read(arguments..., value));
+        return value;
+    }
+
+    template<typename Value, typename ...Args>
+    static Value invoke_read_or_throw(Args... arguments)
+    {
+        Value value{};
+        BOOST_CHECK_NO_THROW(json_spirit::read_or_throw(arguments..., value));
+        return value;
+    }
+};
+
+template<class Value, bool shouldFail>
+class SyntaxTestHelper
+{
+public:
+    SyntaxTestHelper()
+    {
+        static_assert(std::is_same<Value, std::decay_t<Value>>::value, "internal error: Value isn't plain type");
+    }
+
+    template<typename String>
+    void operator()(const String& source)
+    {
+        std::array<Value, 6> values = {
+            invoke_read(source),
+            invoke_read(make_string_stream(source)),
+            invoke_read(std::begin(source), std::end(source)),
+            invoke_read_or_throw(false, source),
+            invoke_read_or_throw(false, make_string_stream(source)),
+            invoke_read_or_throw(true, std::begin(source), std::end(source)),
+        };
+
+        BOOST_CHECK_EQUAL(values.at(0), values.at(1));
+        BOOST_CHECK_EQUAL(values.at(0), values.at(2));
+        BOOST_CHECK_EQUAL(values.at(0), values.at(3));
+        BOOST_CHECK_EQUAL(values.at(0), values.at(4));
+        BOOST_CHECK_EQUAL(values.at(0), values.at(5));
+    }
+
+private:
+    template<typename ...Args>
+    static Value invoke_read(Args... arguments)
+    {
+        Value value{};
+        if (shouldFail)
+        {
+            BOOST_CHECK(!json_spirit::read(arguments..., value));
+        }
+        else
+        {
+            BOOST_CHECK(json_spirit::read(arguments..., value));
+        }
+        return value;
+    }
+
+    // TODO: JSON Spirit should never throw strings, but it does - we must fix it.
+    template<typename ...Args>
+    static Value invoke_read_or_throw(bool throwsString, Args... arguments)
+    {
+        Value value{};
+        if (shouldFail)
+        {
+            if (throwsString)
+            {
+                BOOST_CHECK_THROW(json_spirit::read_or_throw(arguments..., value), std::string);
+            }
+            else
+            {
+                BOOST_CHECK_THROW(json_spirit::read_or_throw(arguments..., value), json_spirit::Error_position);
+            }
+        }
+        else
+        {
+            BOOST_CHECK_NO_THROW(json_spirit::read_or_throw(arguments..., value));
+        }
+        return value;
+    }
+};
+}
+
+namespace std
+{
+std::ostream& operator<<(std::ostream& stream, const typename ReadTestHelper<std::string>::Case& data)
+{
+    stream << "Case{\n"
+        << "\tsource: " << encoding_cast<std::string>(data.source) << ",\n"
+        << "\tvExpected: " << data.vExpected << ",\n"
+        << "\tmExpected: " << data.mExpected << "\n"
+        << "}\n";
+    return stream;
+}
+
+std::ostream& operator<<(std::ostream& stream, const typename ReadTestHelper<std::wstring>::Case& data)
+{
+    stream << "Case{\n"
+        << "\tsource: " << encoding_cast<std::string>(data.source) << ",\n"
+        << "\tvExpected: " << data.vExpected << ",\n"
+        << "\tmExpected: " << data.mExpected << "\n"
+        << "}\n";
+    return stream;
+}
+}
+
+BOOST_AUTO_TEST_SUITE()
+
+    BOOST_DATA_TEST_CASE(can_parse_small_json, SYNTAX_ONLY_TEST_DATA, sourceUtf8)
+    {
+        SyntaxTestHelper<json_spirit::Value, false> testValue;
+        testValue(sourceUtf8);
+
+        SyntaxTestHelper<json_spirit::mValue, false> testMapValue;
+        testMapValue(sourceUtf8);
+
+        std::wstring sourceUtf16 = utf8_to_wstring(sourceUtf8);
+
+        SyntaxTestHelper<json_spirit::wValue, false> testWideValue;
+        testWideValue(sourceUtf16);
+
+        SyntaxTestHelper<json_spirit::wmValue, false> testWideMapValue;
+        testWideMapValue(sourceUtf16);
+    }
+
+    BOOST_DATA_TEST_CASE(parse_fails_on_invalid_json, SYNTAX_FAIL_TEST_DATA, sourceUtf8)
+    {
+        SyntaxTestHelper<json_spirit::Value, true> testValue;
+        testValue(sourceUtf8);
+
+        SyntaxTestHelper<json_spirit::mValue, true> testMapValue;
+        testMapValue(sourceUtf8);
+
+        std::wstring sourceUtf16 = utf8_to_wstring(sourceUtf8);
+
+        SyntaxTestHelper<json_spirit::wValue, true> testWideValue;
+        testWideValue(sourceUtf16);
+
+        SyntaxTestHelper<json_spirit::wmValue, true> testWideMapValue;
+        testWideMapValue(sourceUtf16);
+    }
+
+    BOOST_DATA_TEST_CASE(can_read_utf8_to_array_value, ReadTestHelper<std::string>::get_test_data(), data)
+    {
+        ReadTestHelper<std::string>::checkRead(data);
+    }
+
+BOOST_AUTO_TEST_SUITE_END()
+
+#if 0
+
+namespace
+{
 
     template< class Config_type >
     struct Test_runner
@@ -48,11 +406,6 @@ namespace
         typedef typename String_type::const_iterator Iter_type;
         typedef std::basic_istringstream< Char_type > Istringstream_type;
         typedef std::basic_istream< Char_type > Istream_type;
-
-        String_type to_str( const char* c_str )
-        {
-            return ::to_str< String_type >( c_str );
-        }
 
         Test_runner()
         {
@@ -105,59 +458,6 @@ namespace
             }
         }
 
-        template< typename Int >
-        void test_syntax( Int min_int, Int max_int )
-        {
-            ostringstream os;
-
-            os << "[" << min_int << "," << max_int << "]";
-
-            test_syntax( os.str().c_str() );
-        }
-
-        void test_syntax()
-        {
-            test_syntax( "{}" );
-            test_syntax( "{ }" );
-            test_syntax( "{ } " );
-            test_syntax( "{ }  " );
-            test_syntax( "{\"\":\"\"}" );
-            test_syntax( "{\"test\":\"123\"}" );
-            test_syntax( "{\"test\" : \"123\"}" );
-            test_syntax( "{\"testing testing testing\":\"123\"}" );
-            test_syntax( "{\"\":\"abc\"}" );
-            test_syntax( "{\"abc\":\"\"}" );
-            test_syntax( "{\"\":\"\"}" );
-            test_syntax( "{\"test\":true}" );
-            test_syntax( "{\"test\":false}" );
-            test_syntax( "{\"test\":null}" );
-            test_syntax( "{\"test1\":\"123\",\"test2\":\"456\"}" );
-            test_syntax( "{\"test1\":\"123\",\"test2\":\"456\",\"test3\":\"789\"}" );
-            test_syntax( "{\"test1\":{\"test2\":\"123\",\"test3\":\"456\"}}" );
-            test_syntax( "{\"test1\":{\"test2\":{\"test3\":\"456\"}}}" );
-            test_syntax( "{\"test1\":[\"a\",\"bb\",\"cc\"]}" );
-            test_syntax( "{\"test1\":[true,false,null]}" );
-            test_syntax( "{\"test1\":[true,\"abc\",{\"a\":\"b\"},{\"d\":false},null]}" );
-            test_syntax( "{\"test1\":[1,2,-3]}" );
-            test_syntax( "{\"test1\":[1.1,2e4,-1.234e-34]}" );
-            test_syntax( "{\n"
-                          "\t\"test1\":\n"
-                          "\t\t{\n"
-                          "\t\t\t\"test2\":\"123\",\n"
-                          "\t\t\t\"test3\":\"456\"\n"
-                          "\t\t}\n"
-                          "}\n" );
-            test_syntax( "[]" );
-            test_syntax( "[ ]" );
-            test_syntax( "[1,2,3]" );
-            test_syntax( "[ 1, -2, 3]" );
-            test_syntax( "[ 1.2, -2e6, -3e-6 ]" );
-            test_syntax( "[ 1.2, \"str\", -3e-6, { \"field\" : \"data\" } ]" );
-
-            test_syntax( INT_MIN, INT_MAX );
-            test_syntax( LLONG_MIN, LLONG_MAX );
-            test_syntax( "[1 2 3]", false );
-        }
 
         Value_type read_cstr( const char* c_str )
         {
@@ -832,13 +1132,13 @@ namespace
 
         test_read( "[\"" + s + "\"]", value );
 
-        assert_eq( value.get_array()[0].get_str(), "äöüß" );
+        assert_eq( value.get_array()[0].get_str(), "ï¿½ï¿½ï¿½ï¿½" );
     }
 
     void test_extended_ascii()
     {
         test_extended_ascii( "\\u00E4\\u00F6\\u00FC\\u00DF" );
-        test_extended_ascii( "äöüß" );
+        test_extended_ascii( "ï¿½ï¿½ï¿½ï¿½" );
     }
 #endif
 }
@@ -861,44 +1161,6 @@ void json_spirit::test_reader()
 #if defined( JSON_SPIRIT_WMVALUE_ENABLED ) && !defined( BOOST_NO_STD_WSTRING )
     Test_runner< wmConfig >().run_tests();
 #endif
-
-#ifndef _DEBUG
-    //ifstream ifs( "test.txt" );
-
-    //string s;
-
-    //getline( ifs, s );
-
-    //timer t;
-
-    //for( int i = 0; i < 2000; ++i )
-    //{
-    //    Value value;
-
-    //    read( s, value );
-    //}
-
-    //cout << t.elapsed() << endl;
-
-//    const string so = write( value );
-
-    //Object obj;
-
-    //for( int i = 0; i < 100000; ++i )
-    //{
-    //    obj.push_back( Pair( "\x01test\x7F", lexical_cast< string >( i ) ) );
-    //}
-
-    //const string s = write( obj );
-
-    //Value value;
-
-    //timer t;
-
-    //read( s, value );
-
-    //cout << t.elapsed() << endl;
-
-    //cout << "obj size " << value.get_obj().size();
-#endif
 }
+
+#endif

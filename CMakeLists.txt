@@ -8,6 +8,8 @@ subdirs(
   samples
 )
 
+enable_testing()
+
 install(
   FILES
   ${CMAKE_SOURCE_DIR}/json_spirit/json_spirit.h
