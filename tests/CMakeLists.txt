@@ -1,9 +1,9 @@
 set(JSON_SPIRIT_UNIT_TESTS_SRCS
     json_spirit_reader_test.cpp
     json_spirit_stream_reader_test.cpp
-    # json_spirit_utils_test.cpp
-    # json_spirit_value_test.cpp
+    json_spirit_value_test.cpp
     # json_spirit_writer_test.cpp
+    # json_spirit_utils_test.cpp
     stdafx.cpp stdafx.h
     test_utils.cpp test_utils.h
     main.cpp

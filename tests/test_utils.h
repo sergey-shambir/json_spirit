@@ -67,4 +67,5 @@ std::ostream& operator<<(std::ostream& out, const json_spirit::Value& value);
 std::ostream& operator<<(std::ostream& out, const json_spirit::mValue& value);
 std::ostream& operator<<(std::ostream& out, const json_spirit::wValue& value);
 std::ostream& operator<<(std::ostream& out, const json_spirit::wmValue& value);
+std::ostream& operator<<(std::ostream& out, Value_type type);
 }
