@@ -8,14 +8,9 @@
 #include "json_spirit_value.h"
 #include "json_spirit_writer.h"
 
-#include <boost/assign/list_of.hpp>
-#include <boost/timer.hpp>
-#include <boost/lexical_cast.hpp>
-
 using namespace json_spirit;
 using namespace std;
 using namespace boost;
-using namespace boost::assign;
 
 // TODO: read-write-read-write-read checks: after each read JSON objects are the same
 // Texts after first and second write should be same.
@@ -86,7 +81,7 @@ std::string SYNTAX_FAIL_TEST_DATA[] = {
     // Arrays without comma separator
     "[1 2 3]",
     "[\"key\" \"value\"]",
-    
+
     // Arrays with double comma separator
     "[1, 2,, 3]",
     "[\"key\",, \"value\"]",
@@ -106,16 +101,6 @@ std::string SYNTAX_FAIL_TEST_DATA[] = {
     // TODO: json_spirit should fail on this test in strict mode.
     // "[1, 2, 3],",
 };
-
-std::stringstream make_string_stream(const std::string& source)
-{
-    return std::stringstream(source);
-}
-
-std::wstringstream make_string_stream(const std::wstring& source)
-{
-    return std::wstringstream(source);
-}
 
 template<typename Value>
 class ReadTestDataBuilder

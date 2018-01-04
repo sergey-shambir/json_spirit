@@ -18,6 +18,16 @@ std::string wstring_to_utf8(const std::wstring& text)
     return utf_to_utf<char>(text);
 }
 
+std::stringstream make_string_stream(const std::string& source)
+{
+    return std::stringstream(source);
+}
+
+std::wstringstream make_string_stream(const std::wstring& source)
+{
+    return std::wstringstream(source);
+}
+
 std::ostream& json_spirit::operator<<(std::ostream& out, const json_spirit::Value& value)
 {
     out << json_spirit::write_string(value, json_spirit::pretty_print | json_spirit::single_line_arrays);

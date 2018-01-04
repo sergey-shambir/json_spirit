@@ -3,135 +3,72 @@
 
 // json spirit version 4.08
 
-#include "json_spirit_stream_reader_test.h"
-#include "utils_test.h"
+#include "stdafx.h"
+#include "test_utils.h"
 #include "json_spirit_stream_reader.h"
-
-#include <sstream>
-#include <boost/assign/list_of.hpp>
+#include <type_traits>
 
 using namespace json_spirit;
 using namespace std;
 using namespace boost;
-using namespace boost::assign;
 
 namespace
 {
-    template< class Config_type >
-    struct Test_runner
-    {
-        typedef typename Config_type::String_type String_type;
-        typedef typename Config_type::Object_type Object_type;
-        typedef typename Config_type::Array_type Array_type;
-        typedef typename Config_type::Value_type Value_type;
-        typedef typename Config_type::Pair_type Pair_type;
-        typedef typename String_type::value_type  Char_type;
-        typedef typename String_type::const_iterator Iter_type;
-        typedef std::basic_istringstream< Char_type > Istringstream_type;
-        typedef std::basic_istream< Char_type > Istream_type;
+template<class Value>
+using StringStream = std::conditional_t<
+    std::is_same<typename Value::String_type, std::wstring>::value,
+    std::wstringstream,
+    std::stringstream
+    >;
 
-        String_type to_str( const char* c_str )
-        {
-            return ::to_str< String_type >( c_str );
-        }
-
-        Test_runner()
-        {
-        }
-
-        void check_stream_reader( Stream_reader< Istream_type, Value_type >& reader, const vector< int >& expected_result )
-        {
-            Value_type v;
-            const bool ok = reader.read_next( v );
-            assert_eq( ok, true );
-            assert_eq( v.type(), array_type );
-            assert_eq( v.get_array().size(), expected_result.size() );
-            for( vector< int >::size_type i = 0; i < v.get_array().size(); ++i )
-            {
-                assert_eq( v.get_array()[i], expected_result[i] );
-            }
-        }
-
-        void check_stream_read_or_throw( Stream_reader_thrower< Istream_type, Value_type >& reader, const vector< int >& expected_result )
-        {
-            Value_type v;
-
-            try
-            {
-                reader.read_next( v );
-                assert_eq( v.type(), array_type );
-                assert_eq( v.get_array().size(), expected_result.size() );
-                for( vector< int >::size_type i = 0; i < v.get_array().size(); ++i )
-                {
-                    assert_eq( v.get_array()[i], expected_result[i] );
-                }
-            }
-            catch( ... )
-            {
-                assert( false );
-            }
-        }
-
-        void test_stream_reader( const char* s )
-        {
-            {
-                Istringstream_type is( to_str( s ) );
-
-                Stream_reader< Istream_type, Value_type > reader( is );
-
-                check_stream_reader( reader, vector< int >() );
-                check_stream_reader( reader, list_of( 1 ) );
-                check_stream_reader( reader, list_of( 1 )( 2 ) );
-                check_stream_reader( reader, list_of( 1 )( 2 )( 3 ) );
-
-                Value_type v;
-                const bool ok = reader.read_next( v );
-                assert_eq( ok, false );
-            }
-            {
-                Istringstream_type is( to_str( s ) );
-
-                Stream_reader_thrower< Istream_type, Value_type > reader( is );
-
-                check_stream_read_or_throw( reader, vector< int >() );
-                check_stream_read_or_throw( reader, list_of( 1 ) );
-                check_stream_read_or_throw( reader, list_of( 1 )( 2 ) );
-                check_stream_read_or_throw( reader, list_of( 1 )( 2 )( 3 ) );
-
-                try
-                {
-                    Value_type v;
-                    reader.read_next( v );
-                    assert( false );
-                }
-                catch( ... )
-                {
-                }
-            }
-        }
-
-        void run_tests()
-        {
-            test_stream_reader( "[][1][1,2][1,2,3]" );
-            test_stream_reader( "[] [1] [1,2] [1,2,3]" );
-            test_stream_reader( " [] [1] [1,2] [1,2,3] " );
-        }
-    };
-}
-
-void json_spirit::test_stream_reader()
+template<class Value>
+class StreamTestHelper
 {
-#ifdef JSON_SPIRIT_VALUE_ENABLED
-    Test_runner< Config  >().run_tests();
-#endif
-#ifdef JSON_SPIRIT_MVALUE_ENABLED
-    Test_runner< mConfig >().run_tests();
-#endif
+public:
+    using Stream = StringStream<Value>;
+    using String = typename Value::String_type;
 
-#if defined( JSON_SPIRIT_WVALUE_ENABLED ) && !defined( BOOST_NO_STD_WSTRING )
-    Test_runner< wConfig  >().run_tests();
-#endif
-#if defined( JSON_SPIRIT_WMVALUE_ENABLED ) && !defined( BOOST_NO_STD_WSTRING )
-    Test_runner< wmConfig >().run_tests();
-#endif
+    StreamTestHelper(const String& source)
+        : m_stream1(source)
+        , m_stream2(source)
+        , m_reader1(m_stream1)
+        , m_reader2(m_stream2)
+    {
+        static_assert(std::is_same<Value, std::decay_t<Value>>::value, "internal error: Value isn't plain type");
+    }
+
+    void operator()()
+    {
+        Value value1{};
+        Value value2{};
+        BOOST_REQUIRE(m_reader1.read_next(value1));
+        BOOST_REQUIRE_NO_THROW(m_reader2.read_next(value2));
+        BOOST_REQUIRE_EQUAL(value1, value2);
+    }
+
+private:
+    Stream m_stream1;
+    Stream m_stream2;
+    json_spirit::Stream_reader<Stream, Value> m_reader1;
+    json_spirit::Stream_reader_thrower<Stream, Value> m_reader2;
+};
 }
+
+std::string SYNTAX_TEST_DATA[] = {
+    "[][1][1,2][1,2,3]",
+    "[] [1] [1,2] [1,2,3]",
+    " [] [1] [1,2] {\"key\":\"value\"} [1,2,3]"
+};
+
+BOOST_AUTO_TEST_SUITE()
+
+    BOOST_DATA_TEST_CASE(can_parse_json_stream, SYNTAX_TEST_DATA, sourceUtf8)
+    {
+        StreamTestHelper<json_spirit::Value> helperUtf8(sourceUtf8);
+        helperUtf8();
+
+        StreamTestHelper<json_spirit::wValue> helperWide(utf8_to_wstring(sourceUtf8));
+        helperWide();
+    }
+
+BOOST_AUTO_TEST_SUITE_END()

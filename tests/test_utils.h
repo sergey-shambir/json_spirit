@@ -58,6 +58,9 @@ inline StringType encoding_cast(const std::wstring& text)
     return helper(text);
 }
 
+std::wstringstream make_string_stream(const std::wstring& source);
+std::stringstream make_string_stream(const std::string& source);
+
 namespace json_spirit
 {
 std::ostream& operator<<(std::ostream& out, const json_spirit::Value& value);
