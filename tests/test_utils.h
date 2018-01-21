@@ -68,4 +68,11 @@ std::ostream& operator<<(std::ostream& out, const json_spirit::mValue& value);
 std::ostream& operator<<(std::ostream& out, const json_spirit::wValue& value);
 std::ostream& operator<<(std::ostream& out, const json_spirit::wmValue& value);
 std::ostream& operator<<(std::ostream& out, Value_type type);
+
+template<class FirstT, class SecondT>
+std::ostream& operator<<(std::ostream& out, std::pair<FirstT, SecondT> pair)
+{
+    out << "[pair first:" << pair.first << " second:" << pair.second;
+    return out;
+}
 }
