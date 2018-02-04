@@ -1,6 +1,24 @@
 # JSON Spirit
 
-(Work in progress)
+JSON Spirit is a JSON library with parser based on Boost.Spirit, fork of the [JSON Spirit from CodeProject](https://www.codeproject.com/Articles/20027/).
+
+**Do not use this library in new projects!**
+
+This fork created to maintain existing projects. For the new projects, use one of these:
+
+- [Tencent/rapidjson](https://github.com/Tencent/rapidjson) - extremely fast and well-tested JSON library with inconvient, but powerful API
+- [nlohmann/json](https://github.com/nlohmann/json) - convient and well-tested JSON library for Modern C++
+
+## Development
+
+[![Build Status](https://travis-ci.org/sergey-shambir/json_spirit.svg?branch=master)](https://travis-ci.org/sergey-shambir/json_spirit)
+
+Current goals:
+
+- cleanup this library (use clang-tidy analyzer and clang-format, setup CI, etc.)
+- fix standards conformance (e.g. fix Unicode support for UTF-8 mode)
+
+There's is no goal to complicate library, improve it's perfomance, etc.
 
 ## Build requirements
 
