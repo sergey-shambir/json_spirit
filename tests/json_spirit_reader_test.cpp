@@ -473,9 +473,14 @@ BOOST_AUTO_TEST_SUITE()
         testWideMapValue(sourceUtf16);
     }
 
-    BOOST_DATA_TEST_CASE(read_values_equal_to_expected, ReadTestHelper<std::string>::get_test_data(), data)
+    BOOST_DATA_TEST_CASE(read_values_equal_to_expected_for_string, ReadTestHelper<std::string>::get_test_data(), data)
     {
         ReadTestHelper<std::string>::checkRead(data);
+    }
+
+    BOOST_DATA_TEST_CASE(read_values_equal_to_expected_for_wstring, ReadTestHelper<std::wstring>::get_test_data(), data)
+    {
+        ReadTestHelper<std::wstring>::checkRead(data);
     }
 
 BOOST_AUTO_TEST_SUITE_END()
