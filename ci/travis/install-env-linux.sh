@@ -5,7 +5,6 @@ sudo apt-get install -qq g++-7
 sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-7 90
 sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-7 90
 sudo update-alternatives --install /usr/bin/cpp cpp /usr/bin/cpp-7 90
-sudo update-alternatives --install /usr/bin/cc cc /usr/bin/cc-7 90
 
 # install cmake
 CMAKE_VERSION=3.8.2
@@ -23,3 +22,4 @@ export PATH=$CMAKE_DIR/bin:$PATH
 
 # install conan
 sudo pip install conan
+conan remote add bincrafters https://api.bintray.com/conan/bincrafters/public-conan
