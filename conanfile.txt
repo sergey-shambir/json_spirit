@@ -1,4 +1,5 @@
 [requires]
+Boost.System/1.65.1@bincrafters/stable
 Boost.Spirit/1.65.1@bincrafters/stable
 Boost.Locale/1.65.1@bincrafters/stable
 Boost.Test/1.65.1@bincrafters/stable
