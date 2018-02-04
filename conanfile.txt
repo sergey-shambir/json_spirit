@@ -1,5 +1,7 @@
 [requires]
-Boost/1.64.0@bincrafters/testing
+boost_spirit/1.66.0@bincrafters/stable
+boost_test/1.66.0@bincrafters/stable
+boost_locale/1.66.0@bincrafters/stable
 
 [generators]
 cmake
