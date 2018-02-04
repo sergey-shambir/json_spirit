@@ -8,6 +8,9 @@ subdirs(
   samples
 )
 
+
+include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/functions.cmake)
+
 if ("$ENV{CI_NAME}" STREQUAL "TRAVIS")
   include(${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
   conan_basic_setup()

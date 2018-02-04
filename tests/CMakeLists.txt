@@ -13,3 +13,6 @@ find_package(Boost 1.55 REQUIRED)
 add_executable(json_spirit_unit_tests ${JSON_SPIRIT_UNIT_TESTS_SRCS})
 target_link_libraries(json_spirit_unit_tests json_spirit)
 add_test(json_spirit_unit_tests json_spirit_unit_tests)
+
+custom_enable_cxx14(json_spirit_unit_tests)
+custom_enable_warnings(json_spirit_unit_tests)

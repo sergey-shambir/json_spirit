@@ -15,3 +15,6 @@ find_package(Boost 1.55 REQUIRED)
 add_library(json_spirit STATIC ${JSON_SPIRIT_SRCS})
 target_include_directories(json_spirit PUBLIC ${Boost_INCLUDE_DIR})
 target_include_directories(json_spirit INTERFACE ${CMAKE_CURRENT_SOURCE_DIR})
+
+custom_enable_cxx14(json_spirit)
+custom_enable_warnings(json_spirit)
