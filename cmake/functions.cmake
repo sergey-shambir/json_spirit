@@ -16,10 +16,9 @@ endfunction()
 
 function(custom_enable_warnings TARGET)
     if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL GNU)
-        # TODO: maybe use "-Wduplicated-cond" "-Wduplicated-branches" "-Wlogical-op" "-Wnull-dereference" "-Wold-style-cast"
-        target_compile_options(${TARGET} PRIVATE "-Wall" "-Wextra")
+        target_compile_options(${TARGET} PRIVATE "-Wall" "-Wextra" "-Wpedantic")
     endif()
     if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL Clang)
-        target_compile_options(${TARGET} PRIVATE "-Wall" "-Wextra" "-Wdocumentation")
+        target_compile_options(${TARGET} PRIVATE "-Wall" "-Wextra" "-Wpedantic" "-Wdocumentation")
     endif()
 endfunction()
