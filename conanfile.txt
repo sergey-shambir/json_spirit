@@ -1,0 +1,5 @@
+[requires]
+Boost/1.64.0@bincrafters/testing
+
+[generators]
+cmake

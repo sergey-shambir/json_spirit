@@ -8,6 +8,11 @@ subdirs(
   samples
 )
 
+if ("$ENV{CI_NAME}" STREQUAL "TRAVIS")
+  include(${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
+  conan_basic_setup()
+endif()
+
 enable_testing()
 
 install(
