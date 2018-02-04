@@ -19,7 +19,7 @@ install:
 
 script:
   # project build script
-  - conan install ./conanfile.txt
+  - conan install --build=missing ./conanfile.txt
   - mkdir build && cd build
   - cmake .. -DCMAKE_BUILD_TYPE=$BUILD_CONFIGURATION -DTARGET_CPU=$TARGET_CPU
   - cmake --build .
