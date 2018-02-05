@@ -23,4 +23,8 @@ script:
   - conan install --build=missing ../conanfile.txt
   - cmake .. -DCMAKE_BUILD_TYPE=$BUILD_CONFIGURATION -DTARGET_CPU=$TARGET_CPU
   - cmake --build .
-  - ctest --output-on-failure
+  # ctest --output-on-failure
+  - ls .
+  - ls ..
+  - ls bin
+  - bin/json_spirit_unit_tests
