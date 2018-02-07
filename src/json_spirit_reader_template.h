@@ -215,6 +215,7 @@ namespace json_spirit
 
         void begin_obj( Char_type c )
         {
+            (void)c;
             assert( c == '{' );
 
             begin_compound< Object_type >();
@@ -222,6 +223,7 @@ namespace json_spirit
 
         void end_obj( Char_type c )
         {
+            (void)c;
             assert( c == '}' );
 
             end_compound();
@@ -229,6 +231,7 @@ namespace json_spirit
 
         void begin_array( Char_type c )
         {
+            (void)c;
             assert( c == '[' );
      
             begin_compound< Array_type >();
@@ -236,6 +239,7 @@ namespace json_spirit
 
         void end_array( Char_type c )
         {
+            (void)c;
             assert( c == ']' );
 
             end_compound();
@@ -255,6 +259,8 @@ namespace json_spirit
 
         void new_true( Iter_type begin, Iter_type end )
         {
+            (void)begin;
+            (void)end;
             assert( is_eq( begin, end, "true" ) );
 
             add_to_current( true );
@@ -262,6 +268,8 @@ namespace json_spirit
 
         void new_false( Iter_type begin, Iter_type end )
         {
+            (void)begin;
+            (void)end;
             assert( is_eq( begin, end, "false" ) );
 
             add_to_current( false );
@@ -269,6 +277,8 @@ namespace json_spirit
 
         void new_null( Iter_type begin, Iter_type end )
         {
+            (void)begin;
+            (void)end;
             assert( is_eq( begin, end, "null" ) );
 
             add_to_current( Value_type() );
