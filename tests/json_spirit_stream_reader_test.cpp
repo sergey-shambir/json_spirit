@@ -4,8 +4,8 @@
 // json spirit version 4.08
 
 #include "stdafx.h"
-#include "test_utils.h"
 #include "json_spirit_stream_reader.h"
+#include "test_utils.h"
 #include <type_traits>
 
 using namespace json_spirit;
@@ -18,8 +18,7 @@ template<class Value>
 using StringStream = std::conditional_t<
     std::is_same<typename Value::String_type, std::wstring>::value,
     std::wstringstream,
-    std::stringstream
-    >;
+    std::stringstream>;
 
 template<class Value>
 class StreamTestHelper
@@ -62,13 +61,13 @@ std::string SYNTAX_TEST_DATA[] = {
 
 BOOST_AUTO_TEST_SUITE()
 
-    BOOST_DATA_TEST_CASE(can_parse_json_stream, SYNTAX_TEST_DATA, sourceUtf8)
-    {
-        StreamTestHelper<json_spirit::Value> helperUtf8(sourceUtf8);
-        helperUtf8();
+BOOST_DATA_TEST_CASE(can_parse_json_stream, SYNTAX_TEST_DATA, sourceUtf8)
+{
+    StreamTestHelper<json_spirit::Value> helperUtf8(sourceUtf8);
+    helperUtf8();
 
-        StreamTestHelper<json_spirit::wValue> helperWide(utf8_to_wstring(sourceUtf8));
-        helperWide();
-    }
+    StreamTestHelper<json_spirit::wValue> helperWide(utf8_to_wstring(sourceUtf8));
+    helperWide();
+}
 
 BOOST_AUTO_TEST_SUITE_END()

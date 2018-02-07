@@ -5,8 +5,8 @@
 
 #include "stdafx.h"
 #include "test_utils.h"
-#include <limits.h>
 #include <cstdint>
+#include <limits.h>
 
 using namespace json_spirit;
 using namespace std;
@@ -29,30 +29,32 @@ const Value COPY_TEST_DATA[] = {
     ""s,
     "42"s,
     "text with space and\nlinebreak"s,
-    Array{1, "a"},
-    Object{{"a"s, "b"s}, {"key"s, 99.86}}};
+    Array{ 1, "a" },
+    Object{ { "a"s, "b"s }, { "key"s, 99.86 } }
+};
 
 const std::pair<Value, bool> IS_UINT64_TEST_DATA[] = {
-    {Value(false), false},
-    {Value(true), false},
-    {Value(""), false},
-    {Value("hello"), false},
-    {Value("0"), false},
-    {Value(0.0), false},
-    {Value(std::numeric_limits<double>::quiet_NaN()), false},
-    {Value(1.0), false},
-    {Value(1.2), false},
-    {Value(1), false},
-    {Value(int64_t(1)), false},
-    {Value(uint64_t(1)), true}};
+    { Value(false), false },
+    { Value(true), false },
+    { Value(""), false },
+    { Value("hello"), false },
+    { Value("0"), false },
+    { Value(0.0), false },
+    { Value(std::numeric_limits<double>::quiet_NaN()), false },
+    { Value(1.0), false },
+    { Value(1.2), false },
+    { Value(1), false },
+    { Value(int64_t(1)), false },
+    { Value(uint64_t(1)), true }
+};
 
 const std::pair<Value, double> GET_REAL_TEST_DATA[] = {
-    {Value(-1), -1.0},
-    {Value(0), 0.0},
-    {Value(1), 1.0},
-    {Value(42), 42.0},
-    {Value((std::numeric_limits<int64_t>::max)()), 9223372036854775800.0},
-    {Value((std::numeric_limits<uint64_t>::max)()), 18446744073709552000.0},
+    { Value(-1), -1.0 },
+    { Value(0), 0.0 },
+    { Value(1), 1.0 },
+    { Value(42), 42.0 },
+    { Value((std::numeric_limits<int64_t>::max)()), 9223372036854775800.0 },
+    { Value((std::numeric_limits<uint64_t>::max)()), 18446744073709552000.0 },
 };
 }
 
@@ -61,14 +63,17 @@ BOOST_AUTO_TEST_SUITE()
 BOOST_AUTO_TEST_CASE(can_use_object_value)
 {
     Object obj1 = {
-        {"name1", "value1"}};
+        { "name1", "value1" }
+    };
     Object obj2 = {
-        {"name1", "value1"}};
+        { "name1", "value1" }
+    };
     Object obj3 = {
-        {"name3", "value3"}};
-    Value value1{obj1};
-    Value value2{obj2};
-    Value value3{obj3};
+        { "name3", "value3" }
+    };
+    Value value1{ obj1 };
+    Value value2{ obj2 };
+    Value value3{ obj3 };
 
     BOOST_CHECK_EQUAL(value1.type(), obj_type);
     BOOST_CHECK_EQUAL(value2.type(), obj_type);
@@ -84,9 +89,9 @@ BOOST_AUTO_TEST_CASE(can_use_object_value)
 
 BOOST_AUTO_TEST_CASE(can_use_array_value)
 {
-    Array array1 = {1, "2"};
-    Array array2 = {1, "2"};
-    Array array3 = {1, "X"};
+    Array array1 = { 1, "2" };
+    Array array2 = { 1, "2" };
+    Array array3 = { 1, "X" };
     Value value1 = array1;
     Value value2 = array2;
     Value value3 = array3;
@@ -216,9 +221,9 @@ BOOST_AUTO_TEST_CASE(can_use_null_value)
 
 BOOST_AUTO_TEST_CASE(can_get_inner_value_by_type)
 {
-    auto check_get_value = [](auto &&expected) {
+    auto check_get_value = [](auto&& expected) {
         using InnerValue = std::decay_t<decltype(expected)>;
-        const InnerValue actual = Value{expected}.get_value<InnerValue>();
+        const InnerValue actual = Value{ expected }.get_value<InnerValue>();
         BOOST_CHECK_EQUAL(actual, expected);
     };
     check_get_value(true);
@@ -254,8 +259,8 @@ BOOST_AUTO_TEST_CASE(can_get_inner_value_by_type)
     check_get_value("hello"s);
     check_get_value("text with space and\nlinebreak"s);
 
-    check_get_value(Array{1, "a"});
-    check_get_value(Object{{"a"s, "b"s}, {"key"s, 99.86}});
+    check_get_value(Array{ 1, "a" });
+    check_get_value(Object{ { "a"s, "b"s }, { "key"s, 99.86 } });
 }
 
 BOOST_DATA_TEST_CASE(can_copy_value, COPY_TEST_DATA, value)
@@ -312,20 +317,20 @@ BOOST_AUTO_TEST_CASE(can_construct_from_initializer_lists)
         }
 #endif
     {
-        Value value = Array{{"hello"}};
+        Value value = Array{ { "hello" } };
         BOOST_CHECK_EQUAL(value.type(), array_type);
         BOOST_CHECK_EQUAL(value.get_array().size(), 1);
         BOOST_CHECK_EQUAL(value.get_array().at(0).get_str(), "hello");
     }
     {
-        Value value = Array{"hello", "world"};
+        Value value = Array{ "hello", "world" };
         BOOST_CHECK_EQUAL(value.type(), array_type);
         BOOST_CHECK_EQUAL(value.get_array().size(), 2);
         BOOST_CHECK_EQUAL(value.get_array().at(0).get_str(), "hello");
         BOOST_CHECK_EQUAL(value.get_array().at(1).get_str(), "world");
     }
     {
-        Value value = Array{"hello", "world", "again"};
+        Value value = Array{ "hello", "world", "again" };
         BOOST_CHECK_EQUAL(value.type(), array_type);
         BOOST_CHECK_EQUAL(value.get_array().size(), 3);
         BOOST_CHECK_EQUAL(value.get_array().at(0).get_str(), "hello");
@@ -333,28 +338,28 @@ BOOST_AUTO_TEST_CASE(can_construct_from_initializer_lists)
         BOOST_CHECK_EQUAL(value.get_array().at(2).get_str(), "again");
     }
     {
-        Value value = Array{Array{"hello"}};
+        Value value = Array{ Array{ "hello" } };
         BOOST_CHECK_EQUAL(value.type(), array_type);
         BOOST_CHECK_EQUAL(value.get_array().size(), 1);
-        BOOST_CHECK_EQUAL(value.get_array().at(0).get_array(), Array{"hello"});
+        BOOST_CHECK_EQUAL(value.get_array().at(0).get_array(), Array{ "hello" });
     }
     {
-        Value value = Value{Array{"hello"}};
-        BOOST_CHECK_EQUAL(value.type(), array_type);
-        BOOST_CHECK_EQUAL(value.get_array().size(), 1);
-        BOOST_CHECK_EQUAL(value.get_array().at(0).get_str(), "hello");
-    }
-    {
-        Value value = Array{Value{"hello"}};
+        Value value = Value{ Array{ "hello" } };
         BOOST_CHECK_EQUAL(value.type(), array_type);
         BOOST_CHECK_EQUAL(value.get_array().size(), 1);
         BOOST_CHECK_EQUAL(value.get_array().at(0).get_str(), "hello");
     }
     {
-        Value value = Array{Array{"hello"}, "world"};
+        Value value = Array{ Value{ "hello" } };
+        BOOST_CHECK_EQUAL(value.type(), array_type);
+        BOOST_CHECK_EQUAL(value.get_array().size(), 1);
+        BOOST_CHECK_EQUAL(value.get_array().at(0).get_str(), "hello");
+    }
+    {
+        Value value = Array{ Array{ "hello" }, "world" };
         BOOST_CHECK_EQUAL(value.type(), array_type);
         BOOST_CHECK_EQUAL(value.get_array().size(), 2);
-        BOOST_CHECK_EQUAL(value.get_array().at(0).get_array(), Array{"hello"});
+        BOOST_CHECK_EQUAL(value.get_array().at(0).get_array(), Array{ "hello" });
         BOOST_CHECK_EQUAL(value.get_array().at(1).get_str(), "world");
     }
 }

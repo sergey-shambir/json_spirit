@@ -67,12 +67,12 @@ std::string SYNTAX_ONLY_TEST_DATA[] = {
 
     // object with nested object
     "{\n"
-                    "\t\"test1\":\n"
-                    "\t\t{\n"
-                    "\t\t\t\"test2\":\"123\",\n"
-                    "\t\t\t\"test3\":\"456\"\n"
-                    "\t\t}\n"
-                    "}\n",
+    "\t\"test1\":\n"
+    "\t\t{\n"
+    "\t\t\t\"test2\":\"123\",\n"
+    "\t\t\t\"test3\":\"456\"\n"
+    "\t\t}\n"
+    "}\n",
     "{\"test1\":{\"test2\":{\"test3\":\"456\"}}}",
     "{\"test1\":{\"test2\":\"123\",\"test3\":\"456\"}}",
 };
@@ -89,7 +89,7 @@ std::string SYNTAX_FAIL_TEST_DATA[] = {
     // Objects without comma/colon separator
     "{ \"key\": \"value\" \"anotherKey\": \"anotherValue\" }",
     "{ \"key\" \"value\", \"anotherKey\": \"anotherValue\" }",
-    
+
     // Objects with double comma/colon separator
     "{ \"key\": \"value\",, \"anotherKey\": \"anotherValue\" }",
     "{ \"key\": \"value\", \"anotherKey\": :\"anotherValue\" }",
@@ -106,7 +106,7 @@ template<typename Value>
 class ReadTestDataBuilder
 {
 public:
-    using Config = typename  Value::Config_type;
+    using Config = typename Value::Config_type;
     using Object = typename Config::Object_type;
     using Array = typename Config::Array_type;
     using String = typename Config::String_type;
@@ -128,7 +128,7 @@ public:
 })***";
         return encoding_cast<String>(source);
     }
-    
+
     static String get_source_2()
     {
         constexpr char source[] = R"***({
@@ -144,7 +144,7 @@ public:
 })***";
         return encoding_cast<String>(source);
     }
-    
+
     static String get_source_3()
     {
         constexpr char source[] = R"***([
@@ -157,7 +157,7 @@ public:
 ])***";
         return encoding_cast<String>(source);
     }
-    
+
     static String get_source_4()
     {
         constexpr char source[] = R"***([
@@ -189,30 +189,13 @@ public:
     {
         return Value(Object{
             { key("name 1"), string("value 1") },
-            { key("name 2"), Value(Object{
-                { key("name 3"), array( -10, 42, 99999 ) },
-                { key("another name"), Value(Object{
-                    { key("name 5"), Value() },
-                    { key("name 4"), Value(15812) }
-                })},
-                { key("name 7"), string("This is a \"heavy\" case") }
-            })}
-        });
+            { key("name 2"), Value(Object{ { key("name 3"), array(-10, 42, 99999) }, { key("another name"), Value(Object{ { key("name 5"), Value() }, { key("name 4"), Value(15812) } }) }, { key("name 7"), string("This is a \"heavy\" case") } }) } });
     }
 
     static Value get_value_2()
     {
         return Value(Object{
-            { key("country"), Value(Object{
-                { key("city"), Value(Object{
-                    { key("street_info"), Value(Object{
-                        { key("house_info"), Value(Object{
-                            { key("address"), string("Soloviev street, 25") }
-                        })}
-                    })}
-                })}
-            })}
-        });
+            { key("country"), Value(Object{ { key("city"), Value(Object{ { key("street_info"), Value(Object{ { key("house_info"), Value(Object{ { key("address"), string("Soloviev street, 25") } }) } }) } }) } }) } });
     }
 
     static Value get_value_3()
@@ -228,8 +211,7 @@ public:
             -1.234000000000000e-123,
             1.000000000000000e-123,
             1234567890.123456,
-            123
-        );
+            123);
     }
 
     static Value get_value_5()
@@ -243,8 +225,7 @@ public:
             string("abc"),
             string("abc"),
             string("abc"),
-            string("\x01\x02\x7F")
-        );
+            string("\x01\x02\x7F"));
     }
 
 private:
@@ -258,10 +239,10 @@ private:
         return Value(encoding_cast<String>(str));
     }
 
-    template <typename ...Args>
+    template<typename... Args>
     static Value array(Args... args)
     {
-        return Value(Array{Value(args)...});
+        return Value(Array{ Value(args)... });
     }
 };
 
@@ -327,8 +308,8 @@ public:
         BOOST_REQUIRE_EQUAL(mValues.at(4), data.mExpected);
         BOOST_REQUIRE_EQUAL(mValues.at(5), data.mExpected);
     }
-    
-    template<typename Value, typename ...Args>
+
+    template<typename Value, typename... Args>
     static Value invoke_read(Args... arguments)
     {
         Value value{};
@@ -336,7 +317,7 @@ public:
         return value;
     }
 
-    template<typename Value, typename ...Args>
+    template<typename Value, typename... Args>
     static Value invoke_read_or_throw(Args... arguments)
     {
         Value value{};
@@ -374,7 +355,7 @@ public:
     }
 
 private:
-    template<typename ...Args>
+    template<typename... Args>
     static Value invoke_read(Args... arguments)
     {
         Value value{};
@@ -390,7 +371,7 @@ private:
     }
 
     // TODO: JSON Spirit should never throw strings, but it does - we must fix it.
-    template<typename ...Args>
+    template<typename... Args>
     static Value invoke_read_or_throw(bool throwsString, Args... arguments)
     {
         Value value{};
@@ -419,68 +400,68 @@ namespace std
 std::ostream& operator<<(std::ostream& stream, const typename ReadTestHelper<std::string>::Case& data)
 {
     stream << "Case{\n"
-        << "\tsource: " << encoding_cast<std::string>(data.source) << ",\n"
-        << "\tvExpected: " << data.vExpected << ",\n"
-        << "\tmExpected: " << data.mExpected << "\n"
-        << "}\n";
+           << "\tsource: " << encoding_cast<std::string>(data.source) << ",\n"
+           << "\tvExpected: " << data.vExpected << ",\n"
+           << "\tmExpected: " << data.mExpected << "\n"
+           << "}\n";
     return stream;
 }
 
 std::ostream& operator<<(std::ostream& stream, const typename ReadTestHelper<std::wstring>::Case& data)
 {
     stream << "Case{\n"
-        << "\tsource: " << encoding_cast<std::string>(data.source) << ",\n"
-        << "\tvExpected: " << data.vExpected << ",\n"
-        << "\tmExpected: " << data.mExpected << "\n"
-        << "}\n";
+           << "\tsource: " << encoding_cast<std::string>(data.source) << ",\n"
+           << "\tvExpected: " << data.vExpected << ",\n"
+           << "\tmExpected: " << data.mExpected << "\n"
+           << "}\n";
     return stream;
 }
 }
 
 BOOST_AUTO_TEST_SUITE()
 
-    BOOST_DATA_TEST_CASE(can_parse_small_json, SYNTAX_ONLY_TEST_DATA, sourceUtf8)
-    {
-        SyntaxTestHelper<json_spirit::Value, false> testValue;
-        testValue(sourceUtf8);
+BOOST_DATA_TEST_CASE(can_parse_small_json, SYNTAX_ONLY_TEST_DATA, sourceUtf8)
+{
+    SyntaxTestHelper<json_spirit::Value, false> testValue;
+    testValue(sourceUtf8);
 
-        SyntaxTestHelper<json_spirit::mValue, false> testMapValue;
-        testMapValue(sourceUtf8);
+    SyntaxTestHelper<json_spirit::mValue, false> testMapValue;
+    testMapValue(sourceUtf8);
 
-        std::wstring sourceUtf16 = utf8_to_wstring(sourceUtf8);
+    std::wstring sourceUtf16 = utf8_to_wstring(sourceUtf8);
 
-        SyntaxTestHelper<json_spirit::wValue, false> testWideValue;
-        testWideValue(sourceUtf16);
+    SyntaxTestHelper<json_spirit::wValue, false> testWideValue;
+    testWideValue(sourceUtf16);
 
-        SyntaxTestHelper<json_spirit::wmValue, false> testWideMapValue;
-        testWideMapValue(sourceUtf16);
-    }
+    SyntaxTestHelper<json_spirit::wmValue, false> testWideMapValue;
+    testWideMapValue(sourceUtf16);
+}
 
-    BOOST_DATA_TEST_CASE(parse_fails_on_invalid_json, SYNTAX_FAIL_TEST_DATA, sourceUtf8)
-    {
-        SyntaxTestHelper<json_spirit::Value, true> testValue;
-        testValue(sourceUtf8);
+BOOST_DATA_TEST_CASE(parse_fails_on_invalid_json, SYNTAX_FAIL_TEST_DATA, sourceUtf8)
+{
+    SyntaxTestHelper<json_spirit::Value, true> testValue;
+    testValue(sourceUtf8);
 
-        SyntaxTestHelper<json_spirit::mValue, true> testMapValue;
-        testMapValue(sourceUtf8);
+    SyntaxTestHelper<json_spirit::mValue, true> testMapValue;
+    testMapValue(sourceUtf8);
 
-        std::wstring sourceUtf16 = utf8_to_wstring(sourceUtf8);
+    std::wstring sourceUtf16 = utf8_to_wstring(sourceUtf8);
 
-        SyntaxTestHelper<json_spirit::wValue, true> testWideValue;
-        testWideValue(sourceUtf16);
+    SyntaxTestHelper<json_spirit::wValue, true> testWideValue;
+    testWideValue(sourceUtf16);
 
-        SyntaxTestHelper<json_spirit::wmValue, true> testWideMapValue;
-        testWideMapValue(sourceUtf16);
-    }
+    SyntaxTestHelper<json_spirit::wmValue, true> testWideMapValue;
+    testWideMapValue(sourceUtf16);
+}
 
-    BOOST_DATA_TEST_CASE(read_values_equal_to_expected_for_string, ReadTestHelper<std::string>::get_test_data(), data)
-    {
-        ReadTestHelper<std::string>::checkRead(data);
-    }
+BOOST_DATA_TEST_CASE(read_values_equal_to_expected_for_string, ReadTestHelper<std::string>::get_test_data(), data)
+{
+    ReadTestHelper<std::string>::checkRead(data);
+}
 
-    BOOST_DATA_TEST_CASE(read_values_equal_to_expected_for_wstring, ReadTestHelper<std::wstring>::get_test_data(), data)
-    {
-        ReadTestHelper<std::wstring>::checkRead(data);
-    }
+BOOST_DATA_TEST_CASE(read_values_equal_to_expected_for_wstring, ReadTestHelper<std::wstring>::get_test_data(), data)
+{
+    ReadTestHelper<std::wstring>::checkRead(data);
+}
 
 BOOST_AUTO_TEST_SUITE_END()

@@ -1,7 +1,7 @@
 #pragma once
-#include <string>
 #include "json_spirit_value.h"
 #include "json_spirit_writer_template.h"
+#include <string>
 
 //          Copyright Sergey Shambir 2017
 // Distributed under the MIT License, see accompanying file LICENSE.txt

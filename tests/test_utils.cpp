@@ -56,27 +56,27 @@ std::ostream& json_spirit::operator<<(std::ostream& out, json_spirit::Value_type
 {
     switch (type)
     {
-        case json_spirit::obj_type:
-            out << "Object";
-            break;
-        case json_spirit::array_type:
-            out << "Array";
-            break;
-        case json_spirit::str_type:
-            out << "String";
-            break;
-        case json_spirit::bool_type:
-            out << "Boolean";
-            break;
-        case json_spirit::int_type:
-            out << "Integer";
-            break;
-        case json_spirit::real_type:
-            out << "Number";
-            break;
-        case json_spirit::null_type:
-            out << "null";
-            break;
+    case json_spirit::obj_type:
+        out << "Object";
+        break;
+    case json_spirit::array_type:
+        out << "Array";
+        break;
+    case json_spirit::str_type:
+        out << "String";
+        break;
+    case json_spirit::bool_type:
+        out << "Boolean";
+        break;
+    case json_spirit::int_type:
+        out << "Integer";
+        break;
+    case json_spirit::real_type:
+        out << "Number";
+        break;
+    case json_spirit::null_type:
+        out << "null";
+        break;
     }
     return out;
 }
