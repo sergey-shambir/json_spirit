@@ -2,21 +2,21 @@ cmake_minimum_required(VERSION 3.8)
 
 project(json_spirit)
 
+include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/functions.cmake)
+
+enable_testing()
+
+if ("$ENV{CI_NAME}" STREQUAL "TRAVIS")
+  include(${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
+  conan_basic_setup()
+  ctest_binary_directory("${CMAKE_BINARY_DIR}")
+endif()
+
 subdirs(
   src
   tests
   samples
 )
-
-
-include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/functions.cmake)
-
-if ("$ENV{CI_NAME}" STREQUAL "TRAVIS")
-  include(${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
-  conan_basic_setup()
-endif()
-
-enable_testing()
 
 install(
   FILES
