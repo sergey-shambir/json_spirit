@@ -319,20 +319,20 @@ BOOST_AUTO_TEST_CASE(can_construct_from_initializer_lists)
     {
         Value value = Array{ { "hello" } };
         BOOST_CHECK_EQUAL(value.type(), array_type);
-        BOOST_CHECK_EQUAL(value.get_array().size(), 1);
+        BOOST_CHECK_EQUAL(value.get_array().size(), 1u);
         BOOST_CHECK_EQUAL(value.get_array().at(0).get_str(), "hello");
     }
     {
         Value value = Array{ "hello", "world" };
         BOOST_CHECK_EQUAL(value.type(), array_type);
-        BOOST_CHECK_EQUAL(value.get_array().size(), 2);
+        BOOST_CHECK_EQUAL(value.get_array().size(), 2u);
         BOOST_CHECK_EQUAL(value.get_array().at(0).get_str(), "hello");
         BOOST_CHECK_EQUAL(value.get_array().at(1).get_str(), "world");
     }
     {
         Value value = Array{ "hello", "world", "again" };
         BOOST_CHECK_EQUAL(value.type(), array_type);
-        BOOST_CHECK_EQUAL(value.get_array().size(), 3);
+        BOOST_CHECK_EQUAL(value.get_array().size(), 3u);
         BOOST_CHECK_EQUAL(value.get_array().at(0).get_str(), "hello");
         BOOST_CHECK_EQUAL(value.get_array().at(1).get_str(), "world");
         BOOST_CHECK_EQUAL(value.get_array().at(2).get_str(), "again");
@@ -340,25 +340,25 @@ BOOST_AUTO_TEST_CASE(can_construct_from_initializer_lists)
     {
         Value value = Array{ Array{ "hello" } };
         BOOST_CHECK_EQUAL(value.type(), array_type);
-        BOOST_CHECK_EQUAL(value.get_array().size(), 1);
+        BOOST_CHECK_EQUAL(value.get_array().size(), 1u);
         BOOST_CHECK_EQUAL(value.get_array().at(0).get_array(), Array{ "hello" });
     }
     {
         Value value = Value{ Array{ "hello" } };
         BOOST_CHECK_EQUAL(value.type(), array_type);
-        BOOST_CHECK_EQUAL(value.get_array().size(), 1);
+        BOOST_CHECK_EQUAL(value.get_array().size(), 1u);
         BOOST_CHECK_EQUAL(value.get_array().at(0).get_str(), "hello");
     }
     {
         Value value = Array{ Value{ "hello" } };
         BOOST_CHECK_EQUAL(value.type(), array_type);
-        BOOST_CHECK_EQUAL(value.get_array().size(), 1);
+        BOOST_CHECK_EQUAL(value.get_array().size(), 1u);
         BOOST_CHECK_EQUAL(value.get_array().at(0).get_str(), "hello");
     }
     {
         Value value = Array{ Array{ "hello" }, "world" };
         BOOST_CHECK_EQUAL(value.type(), array_type);
-        BOOST_CHECK_EQUAL(value.get_array().size(), 2);
+        BOOST_CHECK_EQUAL(value.get_array().size(), 2u);
         BOOST_CHECK_EQUAL(value.get_array().at(0).get_array(), Array{ "hello" });
         BOOST_CHECK_EQUAL(value.get_array().at(1).get_str(), "world");
     }
