@@ -37,8 +37,112 @@
 
 namespace json_spirit
 {
-const spirit_namespace::int_parser<boost::int64_t> int64_p = spirit_namespace::int_parser<boost::int64_t>();
-const spirit_namespace::uint_parser<boost::uint64_t> uint64_p = spirit_namespace::uint_parser<boost::uint64_t>();
+
+// Does not allow `+[0..9]` numbers - leading `+` is not allowed for JSON.
+template<
+    typename T = unsigned,
+    int Radix = 10,
+    unsigned MinDigits = 1,
+    int MaxDigits = -1>
+struct json_int_parser_impl
+    : spirit_namespace::parser<json_int_parser_impl<T, Radix, MinDigits, MaxDigits>>
+{
+    typedef json_int_parser_impl<T, Radix, MinDigits, MaxDigits> self_t;
+
+    template<typename ScannerT>
+    struct result
+    {
+        typedef typename spirit_namespace::match_result<ScannerT, T>::type type;
+    };
+
+    template<typename ScannerT>
+    typename spirit_namespace::parser_result<self_t, ScannerT>::type
+    parse(ScannerT const& scan) const
+    {
+        using namespace spirit_namespace;
+
+        typedef spirit_namespace::impl::extract_int<Radix, MinDigits, MaxDigits,
+            spirit_namespace::impl::negative_accumulate<T, Radix>>
+            extract_int_neg_t;
+        typedef spirit_namespace::impl::extract_int<Radix, MinDigits, MaxDigits,
+            spirit_namespace::impl::positive_accumulate<T, Radix>>
+            extract_int_pos_t;
+
+        if (!scan.at_end())
+        {
+            T n = 0;
+            std::size_t count = 0;
+            typename ScannerT::iterator_t save = scan.first;
+
+            bool hit = false;
+            if (*scan == '-')
+            {
+                ++scan;
+                ++count;
+                hit = extract_int_neg_t::f(scan, n, count);
+            }
+            else
+            {
+                hit = extract_int_pos_t::f(scan, n, count);
+            }
+
+            if (hit)
+                return scan.create_match(count, n, save, scan.first);
+            else
+                scan.first = save;
+            // return no-match if number overflows or underflows
+        }
+        return scan.no_match();
+    }
+};
+
+template<
+    typename T,
+    int Radix,
+    unsigned MinDigits,
+    int MaxDigits>
+struct json_int_parser : spirit_namespace::parser<json_int_parser<T, Radix, MinDigits, MaxDigits>>
+{
+    typedef json_int_parser<T, Radix, MinDigits, MaxDigits> self_t;
+
+    template<typename ScannerT>
+    struct result
+    {
+        typedef typename spirit_namespace::match_result<ScannerT, T>::type type;
+    };
+
+    template<typename ScannerT>
+    typename spirit_namespace::parser_result<self_t, ScannerT>::type
+    parse(ScannerT const& scan) const
+    {
+        typedef json_int_parser_impl<T, Radix, MinDigits, MaxDigits> impl_t;
+        typedef typename spirit_namespace::parser_result<impl_t, ScannerT>::type result_t;
+        return spirit_namespace::impl::contiguous_parser_parse<result_t>(impl_t(), scan, scan);
+    }
+};
+
+template<typename T>
+struct json_real_parser_policies : public spirit_namespace::strict_real_parser_policies<T>
+{
+    BOOST_STATIC_CONSTANT(bool, allow_trailing_dot = false);
+};
+
+const json_int_parser<boost::int64_t, 10, 1, -1> int64_p{};
+const spirit_namespace::uint_parser<boost::uint64_t> uint64_p{};
+const spirit_namespace::real_parser<double, json_real_parser_policies<double>> json_real_p{};
+
+template<typename Iter_type>
+void throw_error(spirit_namespace::position_iterator<Iter_type> i, const std::string& reason)
+{
+    throw JsonParseError(i.get_position().line, i.get_position().column, reason);
+}
+
+template<typename Iter_type>
+void throw_error(Iter_type i, const std::string& reason)
+{
+    (void)i;
+    throw std::runtime_error(reason);
+}
 
 template<class Iter_type>
 bool is_eq(Iter_type first, Iter_type last, const char* c_str)
@@ -148,22 +252,25 @@ template<class String_type>
 String_type substitute_esc_chars(typename String_type::const_iterator begin,
     typename String_type::const_iterator end)
 {
-    typedef typename String_type::const_iterator Iter_type;
+    using Iter_type = typename String_type::const_iterator;
 
     if (end - begin < 2)
+    {
         return String_type(begin, end);
+    }
 
     String_type result;
-
-    result.reserve(end - begin);
+    result.reserve(static_cast<size_t>(end - begin));
 
     const Iter_type end_minus_1(end - 1);
-
     Iter_type substr_start = begin;
     Iter_type i = begin;
-
     for (; i < end_minus_1; ++i)
     {
+        if (*i == '\n')
+        {
+            throw_error(i, "unescaped newline in string");
+        }
         if (*i == '\\')
         {
             result.append(substr_start, i);
@@ -175,7 +282,6 @@ String_type substitute_esc_chars(typename String_type::const_iterator begin,
             substr_start = i + 1;
         }
     }
-
     result.append(substr_start, end);
 
     return result;
@@ -386,28 +492,15 @@ private:
     String_type name_; // of current name/value pair
 };
 
-template<typename Iter_type>
-void throw_error(spirit_namespace::position_iterator<Iter_type> i, const std::string& reason)
-{
-    throw JsonParseError(i.get_position().line, i.get_position().column, reason);
-}
-
-template<typename Iter_type>
-void throw_error(Iter_type i, const std::string& reason)
-{
-    (void)i;
-    throw std::runtime_error(reason);
-}
-
 // the spirit grammer
 //
 template<class Value_type, class Iter_type>
-class Json_grammer : public spirit_namespace::grammar<Json_grammer<Value_type, Iter_type>>
+class Json_grammar : public spirit_namespace::grammar<Json_grammar<Value_type, Iter_type>>
 {
 public:
-    typedef Semantic_actions<Value_type, Iter_type> Semantic_actions_t;
+    using Semantic_actions_t = Semantic_actions<Value_type, Iter_type>;
 
-    Json_grammer(Semantic_actions_t& semantic_actions)
+    Json_grammar(Semantic_actions_t& semantic_actions)
         : actions_(semantic_actions)
     {
     }
@@ -452,7 +545,7 @@ public:
     class definition
     {
     public:
-        definition(const Json_grammer& self)
+        definition(const Json_grammar& self)
         {
             using namespace spirit_namespace;
 
@@ -461,11 +554,11 @@ public:
             // first we convert the semantic action class methods to functors with the
             // parameter signature expected by spirit
 
-            typedef boost::function<void(Char_type)> Char_action;
-            typedef boost::function<void(Iter_type, Iter_type)> Str_action;
-            typedef boost::function<void(double)> Real_action;
-            typedef boost::function<void(boost::int64_t)> Int_action;
-            typedef boost::function<void(boost::uint64_t)> Uint64_action;
+            using Char_action = boost::function<void(Char_type)>;
+            using Str_action = boost::function<void(Iter_type, Iter_type)>;
+            using Real_action = boost::function<void(double)>;
+            using Int_action = boost::function<void(boost::int64_t)>;
+            using Uint64_action = boost::function<void(boost::uint64_t)>;
 
             Char_action begin_obj(boost::bind(&Semantic_actions_t::begin_obj, &self.actions_, _1));
             Char_action end_obj(boost::bind(&Semantic_actions_t::end_obj, &self.actions_, _1));
@@ -523,7 +616,7 @@ public:
                         '"')];
 
             number_
-                = strict_real_p[new_real]
+                = json_real_p[new_real]
                 | int64_p[new_int]
                 | uint64_p[new_uint64];
         }
@@ -534,28 +627,47 @@ public:
     };
 
 private:
-    Json_grammer& operator=(const Json_grammer&); // to prevent "assignment operator could not be generated" warning
+    Json_grammar& operator=(const Json_grammar&); // to prevent "assignment operator could not be generated" warning
 
     Semantic_actions_t& actions_;
 };
 
-template<class Iter_type, class Value_type>
-void add_posn_iter_and_read_range_or_throw(Iter_type begin, Iter_type end, Value_type& value)
+template<class Iter_type>
+class EpsilonGrammar : public spirit_namespace::grammar<EpsilonGrammar<Iter_type>>
 {
-    typedef spirit_namespace::position_iterator<Iter_type> Posn_iter_t;
+public:
+    template<typename ScannerT>
+    class definition
+    {
+    public:
+        definition(const EpsilonGrammar& self)
+        {
+            (void)self;
+            eps_ = spirit_namespace::eps_p;
+        }
+
+        spirit_namespace::rule<ScannerT> eps_;
+        const spirit_namespace::rule<ScannerT>& start() const { return eps_; }
+    };
+};
+
+template<class Iter_type, class Value_type>
+void add_posn_iter_and_read_range_or_throw(Iter_type begin, Iter_type end, Value_type& value, bool allow_trailing_chars)
+{
+    using Posn_iter_t = spirit_namespace::position_iterator<Iter_type>;
 
     const Posn_iter_t posn_begin(begin, end);
     const Posn_iter_t posn_end(end, end);
 
-    read_range_or_throw(posn_begin, posn_end, value);
+    read_range_or_throw(posn_begin, posn_end, value, allow_trailing_chars);
 }
 
 template<class Istream_type>
 struct Multi_pass_iters
 {
-    typedef typename Istream_type::char_type Char_type;
-    typedef std::istream_iterator<Char_type, Char_type> istream_iter;
-    typedef spirit_namespace::multi_pass<istream_iter> Mp_iter;
+    using Char_type = typename Istream_type::char_type;
+    using istream_iter = std::istream_iterator<Char_type, Char_type>;
+    using Mp_iter = spirit_namespace::multi_pass<istream_iter>;
 
     Multi_pass_iters(Istream_type& is)
     {
@@ -572,24 +684,37 @@ struct Multi_pass_iters
 // reads a JSON Value from a pair of input iterators throwing an exception on invalid input, e.g.
 //
 // string::const_iterator start = str.begin();
-// const string::const_iterator next = read_range_or_throw( str.begin(), str.end(), value );
+// const string::const_iterator next = read_range_or_throw( str.begin(), str.end(), value, allow_trailing_chars );
 //
 // The iterator 'next' will point to the character past the
 // last one read.
 //
 template<class Iter_type, class Value_type>
-Iter_type read_range_or_throw(Iter_type begin, Iter_type end, Value_type& value)
+Iter_type read_range_or_throw(Iter_type begin, Iter_type end, Value_type& value, bool allow_trailing_chars)
 {
     Semantic_actions<Value_type, Iter_type> semantic_actions(value);
 
-    const spirit_namespace::parse_info<Iter_type> info = spirit_namespace::parse(begin, end,
-        Json_grammer<Value_type, Iter_type>(semantic_actions),
-        spirit_namespace::space_p | spirit_namespace::comment_p("//") | spirit_namespace::comment_p("/*", "*/"));
+    const auto skipper = spirit_namespace::space_p
+        | spirit_namespace::comment_p("//")
+        | spirit_namespace::comment_p("/*", "*/");
+    spirit_namespace::parse_info<Iter_type> info = spirit_namespace::parse(begin, end,
+        Json_grammar<Value_type, Iter_type>(semantic_actions),
+        skipper);
 
     if (!info.hit)
     {
         assert(false); // in theory exception should already have been thrown
         throw_error(info.stop, "error");
+    }
+
+    // look for extra trailing characters
+    if (!info.full && !allow_trailing_chars)
+    {
+        info = parse(info.stop, end, *spirit_namespace::space_p);
+        if (!info.full)
+        {
+            throw_error(info.stop, "unexpected trailing characters");
+        }
     }
 
     return info.stop;
@@ -604,11 +729,11 @@ Iter_type read_range_or_throw(Iter_type begin, Iter_type end, Value_type& value)
 // last one read.
 //
 template<class Iter_type, class Value_type>
-bool read_range(Iter_type& begin, Iter_type end, Value_type& value)
+bool read_range(Iter_type& begin, Iter_type end, Value_type& value, bool allow_trailing_chars)
 {
     try
     {
-        begin = read_range_or_throw(begin, end, value);
+        begin = read_range_or_throw(begin, end, value, allow_trailing_chars);
 
         return true;
     }
@@ -627,7 +752,7 @@ bool read_string(const String_type& s, Value_type& value)
 {
     typename String_type::const_iterator begin = s.begin();
 
-    return read_range(begin, s.end(), value);
+    return read_range(begin, s.end(), value, false);
 }
 
 // reads a JSON Value from a string throwing an exception on invalid input, e.g.
@@ -637,7 +762,7 @@ bool read_string(const String_type& s, Value_type& value)
 template<class String_type, class Value_type>
 void read_string_or_throw(const String_type& s, Value_type& value)
 {
-    add_posn_iter_and_read_range_or_throw(s.begin(), s.end(), value);
+    add_posn_iter_and_read_range_or_throw(s.begin(), s.end(), value, false);
 }
 
 // reads a JSON Value from a stream, e.g.
@@ -649,7 +774,7 @@ bool read_stream(Istream_type& is, Value_type& value)
 {
     Multi_pass_iters<Istream_type> mp_iters(is);
 
-    return read_range(mp_iters.begin_, mp_iters.end_, value);
+    return read_range(mp_iters.begin_, mp_iters.end_, value, false);
 }
 
 // reads a JSON Value from a stream throwing an exception on invalid input, e.g.
@@ -661,7 +786,7 @@ void read_stream_or_throw(Istream_type& is, Value_type& value)
 {
     const Multi_pass_iters<Istream_type> mp_iters(is);
 
-    add_posn_iter_and_read_range_or_throw(mp_iters.begin_, mp_iters.end_, value);
+    add_posn_iter_and_read_range_or_throw(mp_iters.begin_, mp_iters.end_, value, false);
 }
 }
 

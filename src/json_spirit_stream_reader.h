@@ -29,7 +29,7 @@ public:
 
     bool read_next(Value_type& value)
     {
-        return read_range(iters_.begin_, iters_.end_, value);
+        return read_range(iters_.begin_, iters_.end_, value, true);
     }
 
 private:
@@ -51,7 +51,7 @@ public:
 
     void read_next(Value_type& value)
     {
-        posn_begin_ = read_range_or_throw(posn_begin_, posn_end_, value);
+        posn_begin_ = read_range_or_throw(posn_begin_, posn_end_, value, true);
     }
 
 private:
