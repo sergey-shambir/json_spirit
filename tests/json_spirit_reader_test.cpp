@@ -379,14 +379,11 @@ private:
         {
             if (throwsString)
             {
-                BOOST_CHECK_THROW(json_spirit::read_or_throw(arguments..., value), std::string);
+                BOOST_CHECK_THROW(json_spirit::read_or_throw(arguments..., value), std::runtime_error);
             }
             else
             {
                 BOOST_CHECK_THROW(json_spirit::read_or_throw(arguments..., value), json_spirit::JsonParseError);
-
-                // Ensure exception can be catched as std::exception.
-                BOOST_CHECK_THROW(json_spirit::read_or_throw(arguments..., value), std::exception);
             }
         }
         else
