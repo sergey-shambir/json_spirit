@@ -21,6 +21,6 @@ script:
   # project build script
   - mkdir build && cd build
   - conan install --build=missing ../conanfile.txt
-  - cmake .. -DCMAKE_BUILD_TYPE=$BUILD_CONFIGURATION -DTARGET_CPU=$TARGET_CPU
+  - cmake .. -DCMAKE_BUILD_TYPE=$BUILD_CONFIGURATION -DTARGET_CPU=$TARGET_CPU -DDEVELOPER_BUILD=ON
   - cmake --build .
   - bin/json_spirit_unit_tests
