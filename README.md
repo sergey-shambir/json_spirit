@@ -9,6 +9,17 @@ This fork created to maintain existing projects. For the new projects, use one o
 - [Tencent/rapidjson](https://github.com/Tencent/rapidjson) - extremely fast and well-tested JSON library with inconvient, but powerful API
 - [nlohmann/json](https://github.com/nlohmann/json) - convient and well-tested JSON library for Modern C++
 
+**Why I should not use it?**
+
+This library
+
+* Is **not** thread-safe
+* Is **not** fully Unicode compatible
+* Can produce warnings in your code
+* Can throw non-standard exceptions
+
+We will fix this in future, but right now **do not use this library in new projects**
+
 ## Development
 
 [![Build Status](https://travis-ci.org/sergey-shambir/json_spirit.svg?branch=master)](https://travis-ci.org/sergey-shambir/json_spirit)
