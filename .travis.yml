@@ -24,3 +24,4 @@ script:
   - cmake .. -DCMAKE_BUILD_TYPE=$BUILD_CONFIGURATION -DTARGET_CPU=$TARGET_CPU -DJSON_SPIRIT_CHECK=ON
   - cmake --build .
   - bin/json_spirit_unit_tests
+  - bin/json_spirit_integration_tests
