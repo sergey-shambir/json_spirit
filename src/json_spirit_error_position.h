@@ -6,42 +6,45 @@
 
 // json spirit version 4.08
 
-#if defined(_MSC_VER) && (_MSC_VER >= 1020)
+#if defined(_MSC_VER)
 #pragma once
 #endif
 
+#include <stdexcept>
 #include <string>
 
 namespace json_spirit
 {
-// An Error_position exception is thrown by the "read_or_throw" functions below on finding an error.
+// An JsonParseError exception is thrown by the "read_or_throw" functions below on finding an error.
 // Note the "read_or_throw" functions are around 3 times slower than the standard functions "read"
 // functions that return a bool.
-//
-struct Error_position
+class JsonParseError final : public std::runtime_error
 {
-    Error_position();
-    Error_position(unsigned int line, unsigned int column, const std::string& reason);
-    bool operator==(const Error_position& lhs) const;
-    unsigned int line_;
-    unsigned int column_;
+public:
+    JsonParseError(unsigned line, unsigned column, const std::string& reason);
+    bool operator==(const JsonParseError& lhs) const;
+
+    unsigned get_line() const;
+    unsigned get_column() const;
+    const std::string& get_reason() const;
+
+private:
+    static std::string format_what(unsigned line, unsigned column, const std::string& reason);
+
+    unsigned line_;
+    unsigned column_;
     std::string reason_;
 };
 
-inline Error_position::Error_position()
-    : line_(0)
-    , column_(0)
-{
-}
-
-inline Error_position::Error_position(unsigned int line, unsigned int column, const std::string& reason)
-    : line_(line)
+inline JsonParseError::JsonParseError(unsigned int line, unsigned int column, const std::string& reason)
+    : std::runtime_error(format_what(line, column, reason))
+    , line_(line)
     , column_(column)
     , reason_(reason)
 {
 }
 
-inline bool Error_position::operator==(const Error_position& lhs) const
+inline bool JsonParseError::operator==(const JsonParseError& lhs) const
 {
     if (this == &lhs)
         return true;
@@ -49,6 +52,29 @@ inline bool Error_position::operator==(const Error_position& lhs) const
     return (reason_ == lhs.reason_)
         && (line_ == lhs.line_)
         && (column_ == lhs.column_);
+}
+
+inline unsigned JsonParseError::get_line() const
+{
+    return line_;
+}
+
+inline unsigned JsonParseError::get_column() const
+{
+    return column_;
+}
+
+inline const std::string& JsonParseError::get_reason() const
+{
+    return reason_;
+}
+
+inline std::string JsonParseError::format_what(unsigned line, unsigned column, const std::string& reason)
+{
+    std::string what;
+    what.append(reason);
+    what.append(" at ").append(std::to_string(line)).append(":").append(std::to_string(column));
+    return what;
 }
 }
 

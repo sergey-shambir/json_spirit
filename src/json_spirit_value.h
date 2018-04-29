@@ -396,11 +396,13 @@ void Value_impl<Config>::check_type(const Value_type vtype) const
 {
     if (type() != vtype)
     {
-        std::ostringstream os;
-
-        os << "get_value< " << value_type_to_string(vtype) << " > called on " << value_type_to_string(type()) << " Value";
-
-        throw std::runtime_error(os.str());
+        std::string reason;
+        reason.append("get_value<")
+            .append(value_type_to_string(vtype))
+            .append("> called on ")
+            .append(value_type_to_string(type()))
+            .append(" value");
+        throw std::runtime_error(reason);
     }
 }
 

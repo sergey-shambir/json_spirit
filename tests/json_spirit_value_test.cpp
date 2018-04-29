@@ -5,8 +5,8 @@
 
 #include "stdafx.h"
 #include "test_utils.h"
-#include <cstdint>
 #include <climits>
+#include <cstdint>
 
 using namespace json_spirit;
 using namespace std;

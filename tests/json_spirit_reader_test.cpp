@@ -383,7 +383,10 @@ private:
             }
             else
             {
-                BOOST_CHECK_THROW(json_spirit::read_or_throw(arguments..., value), json_spirit::Error_position);
+                BOOST_CHECK_THROW(json_spirit::read_or_throw(arguments..., value), json_spirit::JsonParseError);
+
+                // Ensure exception can be catched as std::exception.
+                BOOST_CHECK_THROW(json_spirit::read_or_throw(arguments..., value), std::exception);
             }
         }
         else

@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 3.8)
 project(json_spirit)
 
 # True if you want to develop json_spirit library itself.
-option(DEVELOPER_BUILD "Build test programs" OFF)
+option(JSON_SPIRIT_CHECK "build tests and run static analyzer checks" OFF)
 
 include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/functions.cmake)
 
@@ -12,7 +12,7 @@ if ("$ENV{CI_NAME}" STREQUAL "TRAVIS")
   conan_basic_setup()
 endif()
 
-if(DEVELOPER_BUILD)
+if(JSON_SPIRIT_CHECK)
 # Enable CTest integration.
 enable_testing()
 # Enable Clang Tidy static analysys.

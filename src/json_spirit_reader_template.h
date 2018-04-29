@@ -85,9 +85,9 @@ Char_type unicode_str_to_char(Iter_type& begin)
     const Char_type c4(*(++begin));
 
     return (hex_to_num(c1) << 12)
-     + (hex_to_num(c2) << 8)
-      + (hex_to_num(c3) << 4)
-       + hex_to_num(c4);
+        + (hex_to_num(c2) << 8)
+        + (hex_to_num(c3) << 4)
+        + hex_to_num(c4);
 }
 
 template<class String_type>
@@ -389,14 +389,14 @@ private:
 template<typename Iter_type>
 void throw_error(spirit_namespace::position_iterator<Iter_type> i, const std::string& reason)
 {
-    throw Error_position(i.get_position().line, i.get_position().column, reason);
+    throw JsonParseError(i.get_position().line, i.get_position().column, reason);
 }
 
 template<typename Iter_type>
 void throw_error(Iter_type i, const std::string& reason)
 {
     (void)i;
-    throw reason;
+    throw std::runtime_error(reason);
 }
 
 // the spirit grammer

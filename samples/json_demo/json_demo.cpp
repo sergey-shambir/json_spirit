@@ -128,7 +128,8 @@ int main()
         { 1, "West Street", "Hull", "Yorkshire", "England" },
         { 12, "South Road", "Aberystwyth", "Dyfed", "Wales" },
         { 45, "North Road", "Paignton", "Devon", "England" },
-        { 78, "Upper Street", "Ware", "Hertfordshire", "England" } };
+        { 78, "Upper Street", "Ware", "Hertfordshire", "England" }
+    };
     const string file_name("demo.txt");
     write_addrs(file_name, addrs);
 
