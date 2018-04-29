@@ -11,6 +11,24 @@ if ("$ENV{CI_NAME}" STREQUAL "TRAVIS")
   conan_basic_setup()
 endif()
 
+# Enable Clang Tidy static analysys.
+custom_clang_tidy_checks(
+    "cppcoreguidelines-*"
+    "readability-*"
+    "modernize-*"
+    "misc-*"
+    "bugprone-*"
+    "-clang-analyzer-*"
+    "-clang-diagnostic-*"
+    "-modernize-raw-string-literal"
+    "-cppcoreguidelines-pro-type-member-init"
+    "-cppcoreguidelines-pro-type-vararg"
+    "-cppcoreguidelines-pro-type-union-access"
+    "-cppcoreguidelines-pro-bounds-array-to-pointer-decay"
+    "-cppcoreguidelines-pro-type-reinterpret-cast"
+    "-cppcoreguidelines-pro-bounds-pointer-arithmetic"
+)
+
 subdirs(
   src
   tests

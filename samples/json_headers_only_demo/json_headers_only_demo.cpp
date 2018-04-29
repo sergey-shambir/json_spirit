@@ -41,13 +41,13 @@ void write_address(Array& a, const Address& addr)
 {
     Object addr_obj;
 
-    addr_obj.push_back(Pair("house_number", addr.house_number_));
-    addr_obj.push_back(Pair("road", addr.road_));
-    addr_obj.push_back(Pair("town", addr.town_));
-    addr_obj.push_back(Pair("county", addr.county_));
-    addr_obj.push_back(Pair("country", addr.country_));
+    addr_obj.emplace_back("house_number", addr.house_number_);
+    addr_obj.emplace_back("road", addr.road_);
+    addr_obj.emplace_back("town", addr.town_);
+    addr_obj.emplace_back("county", addr.county_);
+    addr_obj.emplace_back("country", addr.country_);
 
-    a.push_back(addr_obj);
+    a.emplace_back(addr_obj);
 }
 
 Address read_address(const Object& obj)
@@ -90,23 +90,20 @@ Address read_address(const Object& obj)
     return addr;
 }
 
-void write_addrs(const char* file_name, const Address addrs[])
+void write_addrs(const string& file_name, const vector<Address> addrs)
 {
     Array addr_array;
-
-    for (int i = 0; i < 5; ++i)
+    for (auto&& addr : addrs)
     {
-        write_address(addr_array, addrs[i]);
+        write_address(addr_array, addr);
     }
 
     ofstream os(file_name);
-
     write_stream(Value(addr_array), os, pretty_print); // NB need to convert Array to a Value
-
     os.close();
 }
 
-vector<Address> read_addrs(const char* file_name)
+vector<Address> read_addrs(const string& file_name)
 {
     ifstream is(file_name);
 
@@ -115,12 +112,10 @@ vector<Address> read_addrs(const char* file_name)
     read_stream(is, value);
 
     const Array& addr_array = value.get_array();
-
     vector<Address> addrs;
-
-    for (unsigned int i = 0; i < addr_array.size(); ++i)
+    for (auto&& addr : addr_array)
     {
-        addrs.push_back(read_address(addr_array[i].get_obj()));
+        addrs.emplace_back(read_address(addr.get_obj()));
     }
 
     return addrs;
@@ -128,16 +123,13 @@ vector<Address> read_addrs(const char* file_name)
 
 int main()
 {
-    const Address addrs[5] = { { 42, "East Street", "Newtown", "Essex", "England" },
+    const vector<Address> addrs = { { 42, "East Street", "Newtown", "Essex", "England" },
         { 1, "West Street", "Hull", "Yorkshire", "England" },
         { 12, "South Road", "Aberystwyth", "Dyfed", "Wales" },
         { 45, "North Road", "Paignton", "Devon", "England" },
         { 78, "Upper Street", "Ware", "Hertfordshire", "England" } };
-
-    const char* file_name("demo.txt");
-
+    const string file_name("demo.txt");
     write_addrs(file_name, addrs);
-
     vector<Address> new_addrs = read_addrs(file_name);
 
     assert(new_addrs.size() == 5);

@@ -45,12 +45,12 @@ void write_address(mArray& a, const Address& addr)
     addr_obj["county"] = addr.county_;
     addr_obj["country"] = addr.country_;
 
-    a.push_back(addr_obj);
+    a.emplace_back(addr_obj);
 }
 
 const mValue& find_value(const mObject& obj, const string& name)
 {
-    mObject::const_iterator i = obj.find(name);
+    auto i = obj.find(name);
 
     assert(i != obj.end());
     assert(i->first == name);
@@ -71,13 +71,13 @@ Address read_address(const mObject& obj)
     return addr;
 }
 
-void write_addrs(const char* file_name, const Address addrs[])
+void write_addrs(const string& file_name, const vector<Address> addrs)
 {
     mArray addr_array;
 
-    for (int i = 0; i < 5; ++i)
+    for (const Address& addr : addrs)
     {
-        write_address(addr_array, addrs[i]);
+        write_address(addr_array, addr);
     }
 
     ofstream os(file_name);
@@ -87,7 +87,7 @@ void write_addrs(const char* file_name, const Address addrs[])
     os.close();
 }
 
-vector<Address> read_addrs(const char* file_name)
+vector<Address> read_addrs(const string& file_name)
 {
     ifstream is(file_name);
 
@@ -99,9 +99,9 @@ vector<Address> read_addrs(const char* file_name)
 
     vector<Address> addrs;
 
-    for (vector<Address>::size_type i = 0; i < addr_array.size(); ++i)
+    for (const mValue& addr : addr_array)
     {
-        addrs.push_back(read_address(addr_array[i].get_obj()));
+        addrs.emplace_back(read_address(addr.get_obj()));
     }
 
     return addrs;
@@ -109,14 +109,12 @@ vector<Address> read_addrs(const char* file_name)
 
 int main()
 {
-    const Address addrs[5] = { { 42, "East Street", "Newtown", "Essex", "England" },
+    const vector<Address> addrs = { { 42, "East Street", "Newtown", "Essex", "England" },
         { 1, "West Street", "Hull", "Yorkshire", "England" },
         { 12, "South Road", "Aberystwyth", "Dyfed", "Wales" },
         { 45, "North Road", "Paignton", "Devon", "England" },
         { 78, "Upper Street", "Ware", "Hertfordshire", "England" } };
-
-    const char* file_name("demo.txt");
-
+    const string file_name("demo.txt");
     write_addrs(file_name, addrs);
 
     vector<Address> new_addrs = read_addrs(file_name);

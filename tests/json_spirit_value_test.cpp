@@ -6,7 +6,7 @@
 #include "stdafx.h"
 #include "test_utils.h"
 #include <cstdint>
-#include <limits.h>
+#include <climits>
 
 using namespace json_spirit;
 using namespace std;

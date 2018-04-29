@@ -14,9 +14,6 @@ using namespace json_spirit;
 using namespace std;
 using namespace boost;
 
-constexpr int64_t max_int64 = (std::numeric_limits<int64_t>::max)();
-constexpr uint64_t max_uint64 = (std::numeric_limits<uint64_t>::max)();
-
 using ValueTypes = boost::mpl::list<Value, mValue, wValue, wmValue>;
 using ValuesVectorBased = boost::mpl::list<Value, mValue, wValue, wmValue>;
 using ValueVectorTypes = boost::mpl::list<Value, wValue>;

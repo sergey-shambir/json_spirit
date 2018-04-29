@@ -9,7 +9,6 @@
 #include <boost/test/output/compiler_log_formatter.hpp>
 
 using namespace std;
-using boost::unit_test::test_unit_type;
 
 // Specifies formatting for tests log.
 // Add command-line flag `--log-level=test_suite` to see full logs with formatting.
@@ -36,7 +35,7 @@ boost::unit_test::test_suite* init_unit_test_suite(int /*argc*/, char* /*argv*/ 
     boost::unit_test::unit_test_log.set_formatter(new SpecLogFormatter);
     // Root test suite now has name 'All tests'
     boost::unit_test::framework::master_test_suite().p_name.value = "All tests";
-    return 0;
+    return nullptr;
 }
 
 int main(int argc, char* argv[])
