@@ -39,4 +39,3 @@ int main(int argc, char* argv[])
     // Run unit tests with custom initializer.
     return boost::unit_test::unit_test_main(&init_unit_test_suite, argc, argv);
 }
-

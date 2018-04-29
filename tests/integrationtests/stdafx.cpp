@@ -3,8 +3,8 @@
 
 #include "stdafx.h"
 
-#include <vector>
 #include <string>
+#include <vector>
 
 #define BOOST_TEST_NO_MAIN
 #define BOOST_TEST_INCLUDED

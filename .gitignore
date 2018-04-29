@@ -58,3 +58,4 @@ json_spirit_integration_tests
 json_spirit_integration_tests.exe
 json_spirit_unit_tests
 json_spirit_unit_tests.exe
+CMakeLists.txt.user
