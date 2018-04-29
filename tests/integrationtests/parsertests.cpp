@@ -70,7 +70,7 @@ test_cases get_all_json_in_dir(const path& dir)
             {
                 cases.broken_files.push_back(item);
             }
-            else if (boost::starts_with(filename, "i_"))
+            else if (boost::starts_with(filename, "i_") || boost::starts_with(filename, "t_"))
             {
                 cases.undefined_files.push_back(item);
             }
