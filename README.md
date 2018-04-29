@@ -20,6 +20,14 @@ Current goals:
 
 There's is no goal to complicate library, improve it's perfomance, etc.
 
+To build library in developer mode and run tests, do the following:
+
+```
+cmake -DCMAKE_BUILD_TYPE=Debug -DJSON_SPIRIT_CHECK=ON
+cmake --build . -- -j4
+tests/unitests/json_spirit_unit_tests
+```
+
 ## Build requirements
 
 - Compiler with almost full C++14 support
