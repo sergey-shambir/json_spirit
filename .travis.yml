@@ -23,13 +23,15 @@ script:
   - conan install --build=missing ../ci/conanfile.txt
   - cmake .. -DCMAKE_BUILD_TYPE=$BUILD_CONFIGURATION -DTARGET_CPU=$TARGET_CPU -DJSON_SPIRIT_CHECK=ON
   - cmake --build .
-  # run with English locale
+
+  # run tests with English locale
   - export LANG=en_US.UTF-8
   - export LC_ALL=en_US.UTF-8
   - locale -k LC_NUMERIC
   - bin/json_spirit_unit_tests
   - bin/json_spirit_integration_tests
-  # run with Russian locale
+
+  # run tests with Russian locale
   - export LANG=ru_RU.UTF-8
   - export LC_ALL=ru_RU.UTF-8
   - locale -k LC_NUMERIC
