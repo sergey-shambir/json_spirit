@@ -5,7 +5,7 @@ target_link_libraries(json_spirit_integration_tests PRIVATE json_spirit boost_sy
 if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
     target_link_libraries(json_spirit_integration_tests PRIVATE "-fsanitize=address")
     target_compile_options(json_spirit_integration_tests PRIVATE "-fuse-ld=gold" "-fsanitize=address")
-elif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
+elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
     target_link_libraries(json_spirit_integration_tests PRIVATE "-fsanitize=address")
     target_compile_options(json_spirit_integration_tests PRIVATE "-fsanitize=address")
 endif()
