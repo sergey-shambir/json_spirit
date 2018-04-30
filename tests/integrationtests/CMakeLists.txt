@@ -2,9 +2,13 @@
 add_executable(json_spirit_integration_tests "main.cpp" "parsertests.cpp")
 target_link_libraries(json_spirit_integration_tests PRIVATE json_spirit boost_system boost_filesystem dl)
 
-
-target_link_libraries(json_spirit_integration_tests PRIVATE "-fsanitize=address")
-target_compile_options(json_spirit_integration_tests PRIVATE "-pthread" "-fsanitize=address")
+if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
+    target_link_libraries(json_spirit_integration_tests PRIVATE "-fsanitize=address")
+    target_compile_options(json_spirit_integration_tests PRIVATE "-fuse-ld=gold" "-fsanitize=address")
+elif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
+    target_link_libraries(json_spirit_integration_tests PRIVATE "-fsanitize=address")
+    target_compile_options(json_spirit_integration_tests PRIVATE "-fsanitize=address")
+endif()
 
 add_test(json_spirit_integration_tests json_spirit_integration_tests)
 
