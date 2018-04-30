@@ -5,6 +5,10 @@ sudo apt-get install -qq g++-7
 sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-7 90
 sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-7 90
 sudo update-alternatives --install /usr/bin/cpp cpp /usr/bin/cpp-7 90
+sudo apt-get install language-pack-ru
+sudo locale-gen ru_RU
+sudo locale-gen ru_RU.UTF-8
+sudo update-locale
 
 # install cmake
 CMAKE_VERSION=3.8.2
