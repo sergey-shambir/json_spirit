@@ -120,6 +120,75 @@ String_type add_esc_chars(const String_type& s, bool raw_utf8, bool esc_nonascii
     return result;
 }
 
+/**
+ * Formats double to string with following garanties:
+ *  - scienfic (1e+6) or fixed (1000000.0) format selected depending on value
+ *  - numbers in fixed format always have decimal point and at least one digit after it
+ *  - there are no trailing zeros after decimal point except one
+ * Examples:
+ *  0 formatted as 0.0
+ *  1.234 formatted as 1.234
+ *  1e+80 formatted as 1e+80
+ */
+class JsonDoubleFormatter
+{
+public:
+    JsonDoubleFormatter()
+    {
+        // JSON formatting must be locale-independent.
+        stream_.imbue(std::locale::classic());
+        // Only numbers with decimal point parsed as double,
+        //  so we always output numbers with decimal point.
+        stream_.setf(std::ios_base::showpoint);
+        // Precision 17 is enough to represent double values with maximum precision.
+        stream_.precision(17);
+    }
+
+    std::string operator()(double value) const
+    {
+        stream_.str("");
+        stream_ << value;
+        std::string str = stream_.str();
+        normalize_number(str);
+        return str;
+    }
+
+private:
+    void normalize_number(std::string& str) const
+    {
+        size_t dot_pos = str.find('.');
+        if (dot_pos != std::string::npos)
+        {
+            size_t end = str.find('e', dot_pos);
+            if (end == std::string::npos)
+            {
+                end = str.size();
+            }
+
+            if (dot_pos + 1 == end)
+            {
+                // trailing decimal point is not allowed, we should add zero.
+                str.insert(dot_pos + 1, "0");
+            }
+            else
+            {
+                // there are trailing zeros, we prefer to remove them
+                size_t begin = end;
+                while (begin > dot_pos + 2 && (str[begin - 1]) == '0')
+                {
+                    --begin;
+                }
+                if (end > begin)
+                {
+                    str.erase(begin, end - begin);
+                }
+            }
+        }
+    }
+
+    mutable std::stringstream stream_;
+};
+
 // this class generates the JSON text,
 // it keeps track of the indentation level etc.
 //
@@ -134,24 +203,14 @@ class Generator
     typedef typename Object_type::value_type Obj_member_type;
 
 public:
-    Generator(const Value_type& value, Ostream_type& os, int options, unsigned int precision_of_doubles)
+    Generator(const Value_type& value, Ostream_type& os, int options)
         : os_(os)
         , indentation_level_(0)
         , pretty_((options & pretty_print) != 0 || (options & single_line_arrays) != 0)
         , raw_utf8_((options & raw_utf8) != 0)
         , esc_nonascii_((options & always_escape_nonascii) != 0)
         , single_line_arrays_((options & single_line_arrays) != 0)
-        , ios_saver_(os)
     {
-        if (precision_of_doubles > 0)
-        {
-            precision_of_doubles_ = precision_of_doubles;
-        }
-        else
-        {
-            precision_of_doubles_ = (options & remove_trailing_zeros) != 0 ? 16 : 17;
-        }
-
         output(value);
     }
 
@@ -172,11 +231,8 @@ private:
         case bool_type:
             output(value.get_bool());
             break;
-        case real_type:
-            output(value.get_real());
-            break;
-        case int_type:
-            output_int(value);
+        case number_type:
+            output_number(value);
             break;
         case null_type:
             os_ << "null";
@@ -200,15 +256,20 @@ private:
         output(Config_type::get_value(member));
     }
 
-    void output_int(const Value_type& value)
+    void output_number(const Value_type& value)
     {
         if (value.is_uint64())
         {
             os_ << value.get_uint64();
         }
-        else
+        else if (value.is_int64())
         {
             os_ << value.get_int64();
+        }
+        else
+        {
+            // TODO: avoid extra copying for UTF-8 specialization.
+            os_ << to_str<String_type>(double_formatter_(value.get_real()).c_str());
         }
     }
 
@@ -220,11 +281,6 @@ private:
     void output(bool b)
     {
         os_ << to_str<String_type>(b ? "true" : "false");
-    }
-
-    void output(double d)
-    {
-        os_ << std::setprecision(precision_of_doubles_) << d;
     }
 
     static bool contains_composite_elements(const Array_type& arr)
@@ -329,8 +385,7 @@ private:
     bool raw_utf8_;
     bool esc_nonascii_;
     bool single_line_arrays_;
-    int precision_of_doubles_;
-    boost::io::basic_ios_all_saver<Char_type> ios_saver_; // so that ostream state is reset after control is returned to the caller
+    JsonDoubleFormatter double_formatter_;
 };
 
 // writes JSON Value to a stream, e.g.
@@ -338,10 +393,10 @@ private:
 // write_stream( value, os, pretty_print );
 //
 template<class Value_type, class Ostream_type>
-void write_stream(const Value_type& value, Ostream_type& os, int options = none, unsigned int precision_of_doubles = 0)
+void write_stream(const Value_type& value, Ostream_type& os, int options = none)
 {
     os << std::dec;
-    Generator<Value_type, Ostream_type>(value, os, options, precision_of_doubles);
+    Generator<Value_type, Ostream_type>(value, os, options);
 }
 
 // writes JSON Value to a stream, e.g.
@@ -349,13 +404,13 @@ void write_stream(const Value_type& value, Ostream_type& os, int options = none,
 // const string json_str = write( value, pretty_print );
 //
 template<class Value_type>
-typename Value_type::String_type write_string(const Value_type& value, int options = none, unsigned int precision_of_doubles = 0)
+typename Value_type::String_type write_string(const Value_type& value, int options = none)
 {
     typedef typename Value_type::String_type::value_type Char_type;
 
     std::basic_ostringstream<Char_type> os;
 
-    write_stream(value, os, options, precision_of_doubles);
+    write_stream(value, os, options);
 
     return os.str();
 }

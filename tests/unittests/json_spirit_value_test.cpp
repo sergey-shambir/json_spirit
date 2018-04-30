@@ -126,13 +126,13 @@ BOOST_AUTO_TEST_CASE(can_use_int32_value)
     Value value3(std::numeric_limits<int32_t>::max());
     Value value4(std::numeric_limits<int32_t>::min());
 
-    BOOST_CHECK_EQUAL(value1.type(), int_type);
-    BOOST_CHECK_EQUAL(value3.type(), int_type);
+    BOOST_CHECK_EQUAL(value1.type(), number_type);
+    BOOST_CHECK_EQUAL(value3.type(), number_type);
     BOOST_CHECK_EQUAL(value1, value2);
-    BOOST_CHECK_EQUAL(value1.get_int(), 42);
-    BOOST_CHECK_EQUAL(value2.get_int(), 42);
-    BOOST_CHECK_EQUAL(value3.get_int(), std::numeric_limits<int32_t>::max());
-    BOOST_CHECK_EQUAL(value4.get_int(), std::numeric_limits<int32_t>::min());
+    BOOST_CHECK_EQUAL(value1.get_int64(), 42);
+    BOOST_CHECK_EQUAL(value2.get_int64(), 42);
+    BOOST_CHECK_EQUAL(value3.get_int64(), std::numeric_limits<int32_t>::max());
+    BOOST_CHECK_EQUAL(value4.get_int64(), std::numeric_limits<int32_t>::min());
 
     BOOST_CHECK_NE(value1, value3);
     BOOST_CHECK_NE(value3, value4);
@@ -144,8 +144,8 @@ BOOST_AUTO_TEST_CASE(can_use_int64_value)
     Value value2(std::numeric_limits<int64_t>::max());
     Value value3(std::numeric_limits<int64_t>::min());
 
-    BOOST_CHECK_EQUAL(value2.type(), int_type);
-    BOOST_CHECK_EQUAL(value3.type(), int_type);
+    BOOST_CHECK_EQUAL(value2.type(), number_type);
+    BOOST_CHECK_EQUAL(value3.type(), number_type);
     BOOST_CHECK_EQUAL(value1.get_int64(), int64_t(42));
     BOOST_CHECK_EQUAL(value2.get_int64(), std::numeric_limits<int64_t>::max());
     BOOST_CHECK_EQUAL(value3.get_int64(), std::numeric_limits<int64_t>::min());
@@ -161,8 +161,8 @@ BOOST_AUTO_TEST_CASE(can_use_uint64_value)
     Value value2(std::numeric_limits<uint64_t>::max());
     Value value3(std::numeric_limits<uint64_t>::min());
 
-    BOOST_CHECK_EQUAL(value2.type(), int_type);
-    BOOST_CHECK_EQUAL(value3.type(), int_type);
+    BOOST_CHECK_EQUAL(value2.type(), number_type);
+    BOOST_CHECK_EQUAL(value3.type(), number_type);
     BOOST_CHECK_EQUAL(value1.get_uint64(), uint64_t(42));
     BOOST_CHECK_EQUAL(value2.get_uint64(), std::numeric_limits<uint64_t>::max());
     BOOST_CHECK_EQUAL(value3.get_uint64(), std::numeric_limits<uint64_t>::min());
@@ -180,11 +180,11 @@ BOOST_AUTO_TEST_CASE(can_use_double_and_float_values)
     Value value4(std::numeric_limits<double>::max());
     Value value5(std::numeric_limits<double>::min());
 
-    BOOST_CHECK_EQUAL(value1.type(), real_type);
-    BOOST_CHECK_EQUAL(value2.type(), real_type);
-    BOOST_CHECK_EQUAL(value3.type(), real_type);
-    BOOST_CHECK_EQUAL(value4.type(), real_type);
-    BOOST_CHECK_EQUAL(value5.type(), real_type);
+    BOOST_CHECK_EQUAL(value1.type(), number_type);
+    BOOST_CHECK_EQUAL(value2.type(), number_type);
+    BOOST_CHECK_EQUAL(value3.type(), number_type);
+    BOOST_CHECK_EQUAL(value4.type(), number_type);
+    BOOST_CHECK_EQUAL(value5.type(), number_type);
 
     BOOST_CHECK_EQUAL(value1, Value(42.3));
     BOOST_CHECK_EQUAL(value2, Value(std::numeric_limits<float>::max()));
@@ -283,7 +283,7 @@ BOOST_AUTO_TEST_CASE(can_use_map_for_objets)
     object["key 1"] = "hello";
 
     BOOST_CHECK_EQUAL(object.size(), size_t(2));
-    BOOST_CHECK_THROW(object.find("key 1")->second.get_int(), std::exception);
+    BOOST_CHECK_THROW(object.find("key 1")->second.get_int64(), std::exception);
     BOOST_CHECK_EQUAL(object.find("key 1")->second.get_str(), "hello");
     BOOST_CHECK_EQUAL(object.find("key 2")->second.get_str(), "another value");
 }

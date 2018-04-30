@@ -62,7 +62,7 @@ Address read_address(const mObject& obj)
 {
     Address addr;
 
-    addr.house_number_ = find_value(obj, "house_number").get_int();
+    addr.house_number_ = find_value(obj, "house_number").get_int64();
     addr.road_ = find_value(obj, "road").get_str();
     addr.town_ = find_value(obj, "town").get_str();
     addr.county_ = find_value(obj, "county").get_str();

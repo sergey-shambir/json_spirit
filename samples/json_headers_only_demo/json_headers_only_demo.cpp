@@ -63,7 +63,7 @@ Address read_address(const Object& obj)
 
         if (name == "house_number")
         {
-            addr.house_number_ = value.get_int();
+            addr.house_number_ = value.get_int64();
         }
         else if (name == "road")
         {

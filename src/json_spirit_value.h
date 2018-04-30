@@ -12,6 +12,7 @@
 
 #include <boost/config.hpp>
 #include <boost/cstdint.hpp>
+#include <boost/numeric/conversion/cast.hpp>
 #include <boost/shared_ptr.hpp>
 #include <boost/variant.hpp>
 #include <cassert>
@@ -35,8 +36,7 @@ enum Value_type
     array_type,
     str_type,
     bool_type,
-    int_type,
-    real_type,
+    number_type,
     null_type
 };
 
@@ -63,10 +63,34 @@ public:
     Value_impl(const Object& value);
     Value_impl(const Array& value);
     Value_impl(bool value);
-    Value_impl(int value);
-    Value_impl(boost::int64_t value);
-    Value_impl(boost::uint64_t value);
-    Value_impl(double value);
+
+    template<typename IntT>
+    Value_impl(IntT value,
+        std::enable_if_t<
+            std::is_integral<IntT>::value
+            && std::is_signed<IntT>::value
+            && !std::is_same<IntT, bool>::value>* = nullptr)
+        : v_(static_cast<boost::int64_t>(value))
+    {
+    }
+
+    template<typename UintT>
+    Value_impl(UintT value,
+        std::enable_if_t<
+            std::is_integral<UintT>::value
+            && std::is_unsigned<UintT>::value
+            && !std::is_same<UintT, bool>::value>* = nullptr)
+        : v_(static_cast<boost::uint64_t>(value))
+    {
+    }
+
+    template<typename IntT>
+    Value_impl(IntT value,
+        std::enable_if_t<
+            std::is_floating_point<IntT>::value>* = nullptr)
+        : v_(static_cast<double>(value))
+    {
+    }
 
     template<class Iter>
     Value_impl(Iter first, Iter last); // constructor from containers, e.g. std::vector or std::list
@@ -82,6 +106,7 @@ public:
 
     Value_type type() const;
 
+    bool is_int64() const;
     bool is_uint64() const;
     bool is_null() const;
 
@@ -89,7 +114,6 @@ public:
     const Object& get_obj() const;
     const Array& get_array() const;
     bool get_bool() const;
-    int get_int() const;
     boost::int64_t get_int64() const;
     boost::uint64_t get_uint64() const;
     double get_real() const;
@@ -106,11 +130,99 @@ public:
 private:
     void check_type(const Value_type vtype) const;
 
-    typedef boost::variant<boost::recursive_wrapper<Object>, boost::recursive_wrapper<Array>,
-        String_type, bool, boost::int64_t, double, Null, boost::uint64_t>
-        Variant;
+    using Variant = boost::variant<boost::recursive_wrapper<Object>, boost::recursive_wrapper<Array>,
+        String_type, bool, double, Null, boost::uint64_t, boost::int64_t>;
+
+    enum : int
+    {
+        type_index_object,
+        type_index_array,
+        type_index_sting,
+        type_index_bool,
+        type_index_double,
+        type_index_null,
+        type_index_uint64,
+        type_index_int64,
+    };
 
     Variant v_;
+
+    template<class NumberT>
+    struct AssignNumber
+    {
+    };
+
+    struct GetInt64Visitor : public boost::static_visitor<boost::int64_t>
+    {
+        boost::int64_t operator()(boost::int64_t value) const
+        {
+            return value;
+        }
+
+        boost::int64_t operator()(boost::uint64_t value) const
+        {
+            return boost::numeric_cast<boost::int64_t>(value);
+        }
+
+        boost::int64_t operator()(double value) const
+        {
+            return boost::numeric_cast<boost::int64_t>(value);
+        }
+
+        template<class T>
+        boost::int64_t operator()(const T&) const
+        {
+            throw std::logic_error("bad number value");
+        }
+    };
+
+    struct GetUint64Visitor : public boost::static_visitor<boost::uint64_t>
+    {
+        boost::uint64_t operator()(boost::int64_t value) const
+        {
+            return boost::numeric_cast<boost::uint64_t>(value);
+        }
+
+        boost::uint64_t operator()(boost::uint64_t value) const
+        {
+            return value;
+        }
+
+        boost::uint64_t operator()(double value) const
+        {
+            return boost::numeric_cast<boost::uint64_t>(value);
+        }
+
+        template<class T>
+        boost::uint64_t operator()(const T&) const
+        {
+            throw std::logic_error("bad number value");
+        }
+    };
+
+    struct GetRealVisitor : public boost::static_visitor<double>
+    {
+        double operator()(boost::int64_t value) const
+        {
+            return static_cast<double>(value);
+        }
+
+        double operator()(boost::uint64_t value) const
+        {
+            return static_cast<double>(value);
+        }
+
+        double operator()(double value) const
+        {
+            return value;
+        }
+
+        template<class T>
+        double operator()(const T&) const
+        {
+            throw std::logic_error("bad number value");
+        }
+    };
 
     class Variant_converter_visitor : public boost::static_visitor<Variant>
     {
@@ -303,30 +415,6 @@ Value_impl<Config>::Value_impl(bool value)
 }
 
 template<class Config>
-Value_impl<Config>::Value_impl(int value)
-    : v_(static_cast<boost::int64_t>(value))
-{
-}
-
-template<class Config>
-Value_impl<Config>::Value_impl(boost::int64_t value)
-    : v_(value)
-{
-}
-
-template<class Config>
-Value_impl<Config>::Value_impl(boost::uint64_t value)
-    : v_(value)
-{
-}
-
-template<class Config>
-Value_impl<Config>::Value_impl(double value)
-    : v_(value)
-{
-}
-
-template<class Config>
 Value_impl<Config>::Value_impl(const Value_impl<Config>& other)
     : v_(other.v_)
 {
@@ -371,18 +459,39 @@ bool Value_impl<Config>::operator==(const Value_impl& lhs) const
 template<class Config>
 Value_type Value_impl<Config>::type() const
 {
-    if (is_uint64())
+    switch (v_.which())
     {
-        return int_type;
+    default:
+        BOOST_FALLTHROUGH;
+    case type_index_null:
+        return null_type;
+    case type_index_object:
+        return obj_type;
+    case type_index_array:
+        return array_type;
+    case type_index_sting:
+        return str_type;
+    case type_index_bool:
+        return bool_type;
+    case type_index_double:
+        BOOST_FALLTHROUGH;
+    case type_index_int64:
+        BOOST_FALLTHROUGH;
+    case type_index_uint64:
+        return number_type;
     }
+}
 
-    return static_cast<Value_type>(v_.which());
+template<class Config>
+bool Value_impl<Config>::is_int64() const
+{
+    return v_.which() == type_index_int64;
 }
 
 template<class Config>
 bool Value_impl<Config>::is_uint64() const
 {
-    return v_.which() == null_type + 1;
+    return v_.which() == type_index_uint64;
 }
 
 template<class Config>
@@ -439,51 +548,27 @@ bool Value_impl<Config>::get_bool() const
 }
 
 template<class Config>
-int Value_impl<Config>::get_int() const
-{
-    check_type(int_type);
-
-    return static_cast<int>(get_int64());
-}
-
-template<class Config>
 boost::int64_t Value_impl<Config>::get_int64() const
 {
-    check_type(int_type);
-
-    if (is_uint64())
-    {
-        return static_cast<boost::int64_t>(get_uint64());
-    }
-
-    return boost::get<boost::int64_t>(v_);
+    check_type(number_type);
+    GetInt64Visitor visitor;
+    return v_.apply_visitor(visitor);
 }
 
 template<class Config>
 boost::uint64_t Value_impl<Config>::get_uint64() const
 {
-    check_type(int_type);
-
-    if (!is_uint64())
-    {
-        return static_cast<boost::uint64_t>(get_int64());
-    }
-
-    return boost::get<boost::uint64_t>(v_);
+    check_type(number_type);
+    GetUint64Visitor visitor;
+    return v_.apply_visitor(visitor);
 }
 
 template<class Config>
 double Value_impl<Config>::get_real() const
 {
-    if (type() == int_type)
-    {
-        return is_uint64() ? static_cast<double>(get_uint64())
-                           : static_cast<double>(get_int64());
-    }
-
-    check_type(real_type);
-
-    return boost::get<double>(v_);
+    check_type(number_type);
+    GetRealVisitor visitor;
+    return v_.apply_visitor(visitor);
 }
 
 template<class Config>
@@ -545,7 +630,7 @@ struct Type_to_type
 template<class Value>
 int get_value(const Value& value, Type_to_type<int>)
 {
-    return value.get_int();
+    return value.get_int64();
 }
 
 template<class Value>
@@ -610,10 +695,8 @@ inline std::string value_type_to_string(const Value_type vtype)
         return "string";
     case bool_type:
         return "boolean";
-    case int_type:
-        return "integer";
-    case real_type:
-        return "real";
+    case number_type:
+        return "number";
     case null_type:
         return "null";
     }

@@ -23,11 +23,13 @@ enum Output_options
     // non-printable characters allowing UTF-8 sequences held in 8 bit char strings
     // to pass through unaltered.
 
-    remove_trailing_zeros = 0x04,
-    // no longer used kept for backwards compatibility
+    // Reserved for future use
+    // reserved = 0x04,
+
     single_line_arrays = 0x08,
     // pretty printing except that arrays printed on single lines unless they contain
     // composite elements, i.e. objects or arrays
+
     always_escape_nonascii = 0x10,
     // all unicode wide characters are escaped, i.e. outputed as "\uXXXX", even if they are
     // printable under the current locale, ascii printable chars are not escaped

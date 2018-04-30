@@ -198,13 +198,37 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(can_print_object_with_real_pairs, T, ValueTypes)
 {
     using B = Builder<T>;
     using Object = typename T::Object;
-    T value = Object{
+    T value1 = Object{
         { B::key("name_1"), B::value(0.0) },
         { B::key("name_2"), B::value(1.234567890123456789e-108) },
         { B::key("name_3"), B::value(-1234567890.123456789) },
         { B::key("name_4"), B::value(-1.2e-126) }
     };
-    checkWrite(value, R"***({"name_1":0,"name_2":1.2345678901234567e-108,"name_3":-1234567890.1234567,"name_4":-1.2e-126})***");
+    checkWrite(value1, R"***({"name_1":0.0,"name_2":1.2345678901234567e-108,"name_3":-1234567890.1234567,"name_4":-1.2e-126})***");
+
+    T value2 = Object{
+        { B::key("name_5"), B::value(1.0) },
+        { B::key("name_6"), B::value(-1.0) },
+        { B::key("name_7"), B::value(1.001) }
+    };
+    checkWrite(value2, R"***({"name_5":1.0,"name_6":-1.0,"name_7":1.0009999999999999})***");
+
+    T value3 = Object{
+        { B::key("name_08"), B::value(10.1) },
+        { B::key("name_09"), B::value(100.0) },
+        { B::key("name_10"), B::value(9999.0) },
+        { B::key("name_11"), B::value(99999.0) },
+        { B::key("name_12"), B::value(999999.0) },
+    };
+    checkWrite(value3, R"***({"name_08":10.1,"name_09":100.0,"name_10":9999.0,"name_11":99999.0,"name_12":999999.0})***");
+
+    T value4 = Object{
+        { B::key("name_13"), B::value(1e-10) },
+        { B::key("name_14"), B::value(123e65) },
+    };
+    checkWrite(value4, R"***({"name_13":1.0e-10,"name_14":1.2300000000000001e+67})***");
+
+    // 123e65
 }
 
 BOOST_AUTO_TEST_CASE_TEMPLATE(can_print_object_with_null_pairs, T, ValueTypes)
