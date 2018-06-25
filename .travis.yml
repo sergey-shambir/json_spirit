@@ -29,11 +29,11 @@ script:
   - export LC_ALL=en_US.UTF-8
   - locale -k LC_NUMERIC
   - bin/json_spirit_unit_tests
-  - bin/json_spirit_integration_tests
+  # disabled: - bin/json_spirit_integration_tests
 
   # run tests with Russian locale
   - export LANG=ru_RU.UTF-8
   - export LC_ALL=ru_RU.UTF-8
   - locale -k LC_NUMERIC
   - bin/json_spirit_unit_tests
-  - bin/json_spirit_integration_tests
+  # disabled: - bin/json_spirit_integration_tests
